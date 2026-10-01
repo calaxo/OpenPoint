@@ -35,12 +35,14 @@ test('u : EMU -> points (1 pt = 12700 EMU)', () => {
 });
 
 // ───────────────────────── échappement XML ─────────────────────────
-// esc() protège &, <, >, " (mais PAS l'apostrophe) pour l'injection dans le SVG.
-test('esc : échappe les 4 métacaractères XML, pas l\'apostrophe', () => {
+// esc() protège &, <, >, " ET l'apostrophe pour l'injection dans le SVG.
+// Changement venu du LMS (moteur 2026-09) : certains attributs sont écrits entre apostrophes
+// (font-family='…'), une apostrophe non échappée dans un nom de police ou un texte cassait l'attribut.
+test('esc : échappe les 5 métacaractères XML, apostrophe comprise', () => {
   assert.equal(esc('a & b'), 'a &amp; b');
   assert.equal(esc('<x>'), '&lt;x&gt;');
   assert.equal(esc('"q"'), '&quot;q&quot;');
-  assert.equal(esc("l'eau"), "l'eau");        // apostrophe conservée telle quelle
+  assert.equal(esc("l'eau"), 'l&apos;eau');   // apostrophe échappée (attributs entre apostrophes)
   assert.equal(esc('<a href="x">&'), '&lt;a href=&quot;x&quot;&gt;&amp;');
 });
 test('esc : null / undefined -> chaîne vide', () => {
@@ -167,7 +169,12 @@ test('bulletSym : puce en police symbole -> {sym, symbolic}', () => {
 });
 test('symbolText : remappe un run entier, priorité à <a:sym>', () => {
   assert.equal(symbolText('a b', 'Symbol'), 'α β');          // espace conservé
-  assert.equal(symbolText('l', 'Arial', 'Wingdings'), '●');  // symFont prioritaire sur latinFont
+  // <a:sym> ne s'applique QU'AUX caractères de la zone privée U+F000–U+F0FF : PowerPoint laisse
+  // souvent traîner <a:sym Wingdings> sur du texte normal, qu'il affiche pourtant en police latine.
+  // (Changement venu du LMS, cf. docs/journal-rendu.md 2026-09-09 et test/symbol-text.test.js.)
+  assert.equal(symbolText('\uF06C', 'Arial', 'Wingdings'), '●'); // char PUA -> remappé via <a:sym>
+  assert.equal(symbolText('l', 'Arial', 'Wingdings'), null);      // lettre ordinaire -> police latine
+  assert.equal(symbolText('l', 'Wingdings'), '●');                // police LATINE symbole -> run remappé
   assert.equal(symbolText('abc', 'Arial'), null);            // police non symbole -> null
   assert.equal(symbolText('', 'Symbol'), null);              // texte vide -> null
 });
@@ -177,7 +184,9 @@ test('fontFamily : substituts libres et génériques', () => {
   assert.equal(fontFamily(undefined), 'sans-serif');
   assert.equal(fontFamily('Arial'), "'Arial','Liberation Sans',sans-serif");
   assert.equal(fontFamily('Times New Roman'), "'Times New Roman','Liberation Serif',serif");
-  assert.equal(fontFamily('Georgia'), "'Georgia',serif");     // serif via SERIF_RE
+  // Georgia a désormais un substitut libre embarqué (Gelasio, mêmes chasses) : le rendu ne dépend
+  // plus des polices installées sur le poste. (Changement venu du LMS, table FONT_SUBST.)
+  assert.equal(fontFamily('Georgia'), "'Georgia','Gelasio',serif");
   assert.equal(fontFamily('Verdana'), "'Verdana',sans-serif"); // défaut sans-serif
   assert.equal(fontFamily('Wingdings'), "'Wingdings'");        // police symbole : telle quelle
 });

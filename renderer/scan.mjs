@@ -2,7 +2,7 @@
 // Inventorie ce que les decks utilisent, en marquant ce que le moteur ne gère pas encore,
 // pour prioriser les améliorations. N'affiche rien -> ne parse pas, juste des regex sur le XML.
 //
-// Usage : node renderer/scan.mjs "specimen/sample"
+// Usage : node renderer/scan.mjs "specimen/deck A"
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';

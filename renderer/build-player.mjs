@@ -1,6 +1,6 @@
 // ═══ [SORTIE · PRÉSENTATION animée] ═══ docs/ARCHITECTURE.md (§3) · utilise pptx-render.mjs + extractTiming (clic)
 // Lecteur PPTX animé, autonome, SANS PowerPoint : rendu fidèle (SVG) + timeline rejouée.
-// Usage : node renderer/build-player.mjs "specimen/sample.pptx"
+// Usage : node renderer/build-player.mjs "specimen/deck A/deck.pptx"
 // Sortie : renderer/player-out.html  (clic = animation suivante / diapo suivante ; ← → r f)
 
 import { renderSlide, extractTiming } from './pptx-render.mjs';
@@ -9,6 +9,7 @@ import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { unzipSync } from 'fflate';
 import { convertMetafiles } from './metafiles.mjs';
+import { fontsCssFor } from './web-fonts.mjs'; // polices du LMS (woff2 + métriques PowerPoint)
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const pptxArg = process.argv[2];
@@ -28,16 +29,11 @@ const slides = nums.map(n => {
   return { n, svg, steps, animatedSpids };
 });
 
-const ff = (fam, w, s, f) => `@font-face{font-family:'${fam}';font-weight:${w};font-style:${s};font-display:block;src:url('fonts/${f}') format('truetype')}`;
-const fonts = [
-  ff('Poppins',400,'normal','Poppins-Regular.ttf'),ff('Poppins',500,'normal','Poppins-Medium.ttf'),ff('Poppins',600,'normal','Poppins-SemiBold.ttf'),ff('Poppins',700,'normal','Poppins-Bold.ttf'),ff('Poppins',400,'italic','Poppins-Italic.ttf'),ff('Poppins',700,'italic','Poppins-BoldItalic.ttf'),
-  // substituts métrique-compatibles LIBRES (Arial/Times/Courier/Calibri/Cambria) — rendu correct sans la police installée
-  ff('Liberation Sans',400,'normal','LiberationSans-Regular.ttf'),ff('Liberation Sans',700,'normal','LiberationSans-Bold.ttf'),ff('Liberation Sans',400,'italic','LiberationSans-Italic.ttf'),ff('Liberation Sans',700,'italic','LiberationSans-BoldItalic.ttf'),
-  ff('Liberation Serif',400,'normal','LiberationSerif-Regular.ttf'),ff('Liberation Serif',700,'normal','LiberationSerif-Bold.ttf'),ff('Liberation Serif',400,'italic','LiberationSerif-Italic.ttf'),ff('Liberation Serif',700,'italic','LiberationSerif-BoldItalic.ttf'),
-  ff('Liberation Mono',400,'normal','LiberationMono-Regular.ttf'),ff('Liberation Mono',700,'normal','LiberationMono-Bold.ttf'),
-  ff('Carlito',400,'normal','Carlito-Regular.ttf'),ff('Carlito',700,'normal','Carlito-Bold.ttf'),ff('Carlito',400,'italic','Carlito-Italic.ttf'),ff('Carlito',700,'italic','Carlito-BoldItalic.ttf'),
-  ff('Caladea',400,'normal','Caladea-Regular.ttf'),ff('Caladea',700,'normal','Caladea-Bold.ttf'),
-].join('');
+// Polices : exactement celles servies en production, limitées aux familles citées par les diapos (voir web-fonts.mjs).
+const fonts = fontsCssFor(slides.map((s) => s.svg).join(''));
+// PAS de rétrécissement de texte côté navigateur (comme en production) : PowerPoint ne recalcule pas
+// l'autofit à l'affichage, il applique le fontScale ENREGISTRÉ dans le fichier — que le moteur a déjà
+// reporté dans le SVG. Rétrécir ici faisait diverger nos captures du rendu attendu.
 
 const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>${esc(name)}</title>
 <style>${fonts}
@@ -142,16 +138,6 @@ addEventListener('keydown', ev=>{
   else if (ev.key==='r') loadSlide(si);
   else if (ev.key==='f') (document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen());
 });
-(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>{
-  // autofit texte
-  // autofit : normAutofit rétrécit en hauteur ET largeur (PowerPoint réduit la police). Boîtes NON-autofit
-  // (fixed) : rétrécissent en largeur (compense le wrapping police) ; en HAUTEUR seulement si la boîte peut
-  // contenir au moins une ligne (multi-lignes trop haut). Si la boîte est plus COURTE qu'une ligne (insets
-  // qui la réduisent, ex. chiffre 40pt d'une pastille), on NE rétrécit PAS -> le texte déborde comme
-  // PowerPoint (qui ne rétrécit jamais une boîte non-autofit). Sinon les chiffres 1-2-3 étaient réduits.
-  slideEl.__fit=()=>slideEl.querySelectorAll('foreignObject > .af').forEach(d=>{const norm=d.getAttribute('data-af')==='norm';const cap=norm?20:6;const _p=d.querySelector('[data-par]');const oneLine=(_p?parseFloat(getComputedStyle(_p).fontSize):16)*1.2;const canH=norm||d.clientHeight>=oneLine-2;let g=0;while((((canH&&d.scrollHeight>d.clientHeight+4)||d.scrollWidth>d.clientWidth+4))&&g++<cap)d.querySelectorAll('span').forEach(s=>s.style.fontSize=(parseFloat(getComputedStyle(s).fontSize)*.95)+'px');});
-});
-const _load=loadSlide; loadSlide=(i)=>{_load(i); (document.fonts?document.fonts.ready:Promise.resolve()).then(()=>slideEl.__fit&&slideEl.__fit());};
 loadSlide(0);
 </script></body></html>`;
 

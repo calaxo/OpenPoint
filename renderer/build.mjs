@@ -9,6 +9,7 @@
 // Sortie : renderer/viewer.html (+ dossier de travail renderer/_work/<nom>/)
 
 import { renderSlide } from './pptx-render.mjs';
+import { fontsCssFor } from './web-fonts.mjs'; // polices du LMS (woff2 + métriques PowerPoint)
 import { writeFileSync, readFileSync, readdirSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -58,37 +59,15 @@ for (const n of nums) {
   }
 }
 
-const ff = (w, style, file) => `@font-face{font-family:'Poppins';font-weight:${w};font-style:${style};font-display:block;src:url('fonts/${file}') format('truetype')}`;
-const fonts = [ff(400,'normal','Poppins-Regular.ttf'), ff(500,'normal','Poppins-Medium.ttf'),
-  ff(600,'normal','Poppins-SemiBold.ttf'), ff(700,'normal','Poppins-Bold.ttf'),
-  ff(400,'italic','Poppins-Italic.ttf'), ff(700,'italic','Poppins-BoldItalic.ttf')].join('');
+// Polices : exactement celles servies en production, limitées aux familles que les diapos citent (voir web-fonts.mjs).
+const fonts = fontsCssFor(cards);
+// PAS de rétrécissement de texte côté navigateur (comme en production) : PowerPoint ne recalcule pas
+// l'autofit à l'affichage, il applique le fontScale ENREGISTRÉ dans le fichier — que le moteur a déjà
+// reporté dans le SVG. Rétrécir ici faisait diverger nos captures du rendu attendu.
 const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>PPTX renderer</title>
 <style>${fonts}
 body{margin:0;background:#333;font:13px system-ui}.card{margin:16px auto;width:min(90vw,1000px);background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.4)}.lbl{background:#222;color:#ddd;padding:4px 10px}.err{background:#511}pre{color:#fbb;white-space:pre-wrap;padding:8px;font-size:11px}</style>
 </head><body>${cards}
-<script>
-function fit(){
-  // Réduit le texte qui déborde. normAutofit = boîte FIXE -> réduire beaucoup (cap 20). Sinon
-  // (spAutoFit/aucun) = on ne compense que l'écart de métrique de police -> réduction MODÉRÉE
-  // (cap 6, plancher ~0.74x) pour éviter le pied de page réduit à ~2px. Tolérance 4px = ignore
-  // un simple débordement d'interligne.
-  document.querySelectorAll('foreignObject > .af').forEach(div => {
-    // norm : rétrécit en hauteur ET largeur. fixed : en largeur (compense le wrapping) ; en hauteur SEULEMENT
-    // si la boîte peut contenir au moins une ligne (débordement multi-lignes). Boîte plus courte qu'une ligne
-    // (insets, ex. chiffre 40pt d'une pastille) -> pas de rétrécissement, le texte déborde comme PowerPoint.
-    const norm = div.getAttribute('data-af') === 'norm';
-    const cap = norm ? 20 : 6;
-    const p = div.querySelector('[data-par]');
-    const oneLine = (p ? parseFloat(getComputedStyle(p).fontSize) : 16) * 1.2;
-    const canH = norm || div.clientHeight >= oneLine - 2;
-    let g = 0;
-    while ((((canH && div.scrollHeight > div.clientHeight + 4) || div.scrollWidth > div.clientWidth + 4)) && g++ < cap) {
-      div.querySelectorAll('span').forEach(s => { s.style.fontSize = (parseFloat(getComputedStyle(s).fontSize) * 0.95) + 'px'; });
-    }
-  });
-}
-(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(fit);
-</script>
 </body></html>`;
 writeFileSync(join(ROOT, 'renderer', 'viewer.html'), html);
 console.log(`OK -> renderer/viewer.html (${nums.length} diapos)`);

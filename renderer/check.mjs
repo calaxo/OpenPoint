@@ -1,7 +1,7 @@
 // Contrôle batch : rend chaque diapo de chaque .pptx d'un dossier, sans produire de HTML.
 // Rapporte par deck : nb diapos, erreurs, diapos "maigres" (rendu suspect = peu d'éléments).
 //
-// Usage : node renderer/check.mjs "specimen/sample"
+// Usage : node renderer/check.mjs "specimen/deck A"
 
 import { renderSlide } from './pptx-render.mjs';
 import { readFileSync, readdirSync, mkdirSync, existsSync, rmSync, writeFileSync } from 'node:fs';

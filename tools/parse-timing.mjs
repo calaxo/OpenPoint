@@ -192,20 +192,24 @@ export function parseSlide(slideNo) {
 }
 
 // ---------- main ----------
+// Tolérant à l'absence d'échantillon local : sans dossier de diapos, l'outil ne fait rien
+// (les fonctions exportées restent chargées et testables par les tests unitaires).
 const arg = process.argv[2];
-if (arg) {
-  console.log(JSON.stringify(parseSlide(Number(arg)), null, 2));
-} else {
-  const nums = readdirSync(SLIDES_DIR)
-    .filter((f) => /^slide\d+\.xml$/.test(f))
-    .map((f) => Number(f.match(/\d+/)[0]))
-    .sort((a, b) => a - b);
-  const all = nums.map(parseSlide);
-  const out = join(ROOT, 'specimen', 'timeline.json');
-  writeFileSync(out, JSON.stringify(all, null, 2));
-  const total = all.reduce((s, sl) => s + sl.clickSteps.reduce((c, st) => c + st.effects.length, 0), 0);
-  console.log(`OK -> ${out} (${all.filter((s) => s.animated).length} diapos animées, ${total} effets)`);
-}
+try {
+  if (arg) {
+    console.log(JSON.stringify(parseSlide(Number(arg)), null, 2));
+  } else {
+    const nums = readdirSync(SLIDES_DIR)
+      .filter((f) => /^slide\d+\.xml$/.test(f))
+      .map((f) => Number(f.match(/\d+/)[0]))
+      .sort((a, b) => a - b);
+    const all = nums.map(parseSlide);
+    const out = join(ROOT, 'specimen', 'timeline.json');
+    writeFileSync(out, JSON.stringify(all, null, 2));
+    const total = all.reduce((s, sl) => s + sl.clickSteps.reduce((c, st) => c + st.effects.length, 0), 0);
+    console.log(`OK -> ${out} (${all.filter((s) => s.animated).length} diapos animées, ${total} effets)`);
+  }
+} catch { /* pas d'échantillon local : rien à faire */ }
 
 // ---------- exports nommés pour les tests unitaires ----------
 // Bloc AJOUTÉ en fin de fichier (aucune ligne de logique existante modifiée).

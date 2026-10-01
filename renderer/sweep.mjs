@@ -11,6 +11,7 @@ import pixelmatch from 'pixelmatch';
 import puppeteer from 'puppeteer';
 import { renderSlide } from './pptx-render.mjs';
 import { convertMetafiles } from './metafiles.mjs';
+import { fontsCssFor } from './web-fonts.mjs'; // polices du LMS (woff2 + métriques PowerPoint)
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const [, , pptxPath, refsDir, outPath] = process.argv;
@@ -26,11 +27,10 @@ if (!existsSync(join(work, 'ppt', 'presentation.xml'))) {
 }
 const PPT = join(work, 'ppt');
 
-// polices Poppins embarquées (mêmes fichiers que PowerPoint, cf. fonts-fidelity-research.md)
-const b64 = (f) => readFileSync(join(ROOT, 'renderer', 'fonts', f)).toString('base64');
-const ff = (w, s, f) => `@font-face{font-family:'Poppins';font-weight:${w};font-style:${s};src:url(data:font/ttf;base64,${b64(f)})}`;
-const FONTS = [ff(400,'normal','Poppins-Regular.ttf'),ff(500,'normal','Poppins-Medium.ttf'),ff(600,'normal','Poppins-SemiBold.ttf'),ff(700,'normal','Poppins-Bold.ttf'),ff(400,'italic','Poppins-Italic.ttf'),ff(700,'italic','Poppins-BoldItalic.ttf')].join('');
-const AUTOFIT = `document.querySelectorAll('foreignObject > .af').forEach(d=>{const norm=d.getAttribute('data-af')==='norm';const cap=norm?20:6;const _p=d.querySelector('[data-par]');const oneLine=(_p?parseFloat(getComputedStyle(_p).fontSize):16)*1.2;const canH=norm||d.clientHeight>=oneLine-2;let g=0;while((((canH&&d.scrollHeight>d.clientHeight+4)||d.scrollWidth>d.clientWidth+4))&&g++<cap)d.querySelectorAll('span').forEach(s=>s.style.fontSize=(parseFloat(getComputedStyle(s).fontSize)*.95)+'px');});`;
+// Polices : celles servies en production (voir web-fonts.mjs), calculées par diapo plus bas.
+// PAS de rétrécissement de texte côté navigateur (comme en production) : PowerPoint ne recalcule pas
+// l'autofit à l'affichage, il applique le fontScale ENREGISTRÉ dans le fichier — que le moteur a déjà
+// reporté dans le SVG. Rétrécir ici faisait diverger nos captures du rendu attendu.
 
 // slides ayant une réf
 const refNums = readdirSync(refsDir).map(f => (f.match(/slide-(\d+)\.png$/) || [])[1]).filter(Boolean).map(Number).sort((a, b) => a - b);
@@ -58,10 +58,9 @@ for (const n of refNums) {
   let svg;
   try { ({ svg } = renderSlide(PPT, n, { embedImages: true })); } catch (e) { results.push({ n, error: e.message }); continue; }
   svg = svg.replace('width="100%"', `width="${W}" height="${H}"`);
-  const html = `<!doctype html><meta charset=utf8><style>${FONTS}*{margin:0}html,body{background:#0c0d10}</style><body>${svg}</body>`;
+  const html = `<!doctype html><meta charset=utf8><style>${fontsCssFor(svg)}*{margin:0}html,body{background:#0c0d10}</style><body>${svg}</body>`;
   await page.setContent(html, { waitUntil: 'load' });
   try { await page.evaluate(() => document.fonts.ready); } catch {}
-  await page.evaluate(AUTOFIT);
   const buf = await page.screenshot({ clip: { x: 0, y: 0, width: W, height: H } });
   const ref = readFileSync(join(refsDir, `slide-${n}.png`));
   try {
