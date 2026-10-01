@@ -1,4 +1,8 @@
 node_modules/
+
+# plan de travail local : le .pptx d'entrée à convertir (jamais versionné)
+input/
+
 renderer/ref/*.pdf
 renderer/_work/
 renderer/player-out.html

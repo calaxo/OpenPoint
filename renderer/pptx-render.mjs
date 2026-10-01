@@ -1215,9 +1215,12 @@ export function renderSlide(pptDir, slideNo, opts = {}) {
     if (xf) {
       const off=first(xf,'a:off'),ext=first(xf,'a:ext'),chOff=first(xf,'a:chOff'),chExt=first(xf,'a:chExt');
       const g = applyTf({ x:+at(off)['@x'],y:+at(off)['@y'],cx:+at(ext)['@cx'],cy:+at(ext)['@cy'] }, tf);
-      // chExt nul / absent -> sx = Infinity ou NaN : non gardé ici (fichiers valides : chExt présent)
+      // chExt nul / absent -> sx/sy vaudraient Infinity ou NaN : on retombe sur 1 (aucune mise à
+      // l'échelle), comme pour le mapping des SmartArt (cf. renderDiagram). Cas réel : un groupe
+      // purement horizontal (chExt cy=0) contenant un connecteur droit -> sinon son y devient NaN.
       const cE = { cx:+at(chExt)['@cx'], cy:+at(chExt)['@cy'] };
-      childTf = { ox:g.x, oy:g.y, cx0:+at(chOff)['@x'], cy0:+at(chOff)['@y'], sx:g.cx/cE.cx, sy:g.cy/cE.cy, inGroup: true };
+      childTf = { ox:g.x, oy:g.y, cx0:+at(chOff)['@x'], cy0:+at(chOff)['@y'],
+                  sx: cE.cx ? g.cx/cE.cx : 1, sy: cE.cy ? g.cy/cE.cy : 1, inGroup: true };
       // rotation / miroir du GROUPE (les membres sont placés dans la boîte NON tournée, puis tout
       // le <g> tourne autour du centre du groupe). Sans ça, un groupe tourné rend à plat
       // (ex. manches à air inclinées de VENT d.10).
