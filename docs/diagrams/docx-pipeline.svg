@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 600" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <style>
+    .title{font-size:24px;font-weight:700;fill:#0f172a}
+    .sub{font-size:13px;fill:#64748b}
+    .lbl{font-size:14px;font-weight:700;fill:#0f172a}
+    .desc{font-size:11.5px;fill:#334155}
+    .file{font-size:11px;font-weight:700;fill:#1e293b;font-family:Consolas,monospace}
+    .edge{stroke:#2563eb;stroke-width:2.5;fill:none;marker-end:url(#a3)}
+    .note{font-size:11px;fill:#475569}
+  </style>
+  <defs><marker id="a3" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0 0 L7 3 L0 6 z" fill="#2563eb"/></marker></defs>
+
+  <text x="40" y="44" class="title">Pipeline DOCX — renderer/docx-build.mjs</text>
+  <text x="40" y="66" class="sub">renderDocx(path) : un .docx (texte en flux) → HTML paginé en pages A4 (moteur SÉPARÉ du PPTX)</text>
+
+  <!-- étape 1 : chargement -->
+  <rect x="40" y="100" width="230" height="120" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="155" y="124" text-anchor="middle" class="lbl">1 · Chargement</text>
+  <text x="55" y="146" class="desc">• styles.xml + docDefaults</text>
+  <text x="55" y="164" class="desc">• numbering.xml (puces)</text>
+  <text x="55" y="182" class="desc">• theme (couleurs/polices)</text>
+  <text x="55" y="200" class="desc">• rels (images), en-têtes/pieds</text>
+
+  <!-- étape 2 : walk body -->
+  <rect x="300" y="100" width="250" height="120" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="425" y="124" text-anchor="middle" class="lbl">2 · walk(w:body)</text>
+  <text x="315" y="146" class="desc">renderBlock : w:p · w:tbl · w:sdt</text>
+  <text x="315" y="166" class="desc">runs : rPr = docDefaults →</text>
+  <text x="315" y="182" class="desc">     style paragraphe → inline</text>
+  <text x="315" y="200" class="desc">champs PAGE · suivi de modifs</text>
+
+  <!-- étape 3 : flux -->
+  <rect x="580" y="100" width="220" height="120" rx="10" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="2"/>
+  <text x="690" y="124" text-anchor="middle" class="lbl">3 · Flux HTML</text>
+  <text x="595" y="146" class="desc">blocs + marqueurs</text>
+  <text x="595" y="164" class="desc">.pgbreak (lastRendered-</text>
+  <text x="595" y="182" class="desc">PageBreak de Word)</text>
+  <text x="595" y="200" class="desc">émis cachés (#src)</text>
+
+  <!-- étape 4 : paginateur client -->
+  <rect x="830" y="100" width="210" height="120" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="935" y="124" text-anchor="middle" class="lbl">4 · Paginateur</text>
+  <text x="935" y="140" text-anchor="middle" class="desc">(script CLIENT)</text>
+  <text x="845" y="162" class="desc">MESURE les hauteurs</text>
+  <text x="845" y="180" class="desc">→ pages A4 uniformes,</text>
+  <text x="845" y="198" class="desc">en-tête/pied + n° de page</text>
+
+  <path d="M270 160 L300 160" class="edge"/>
+  <path d="M550 160 L580 160" class="edge"/>
+  <path d="M800 160 L830 160" class="edge"/>
+
+  <!-- ce qui est géré -->
+  <text x="40" y="272" class="lbl">Contenu géré (fidèle à Word / oracle LibreOffice)</text>
+  <rect x="40" y="286" width="1000" height="120" rx="12" fill="#f0fdf4" stroke="#86efac"/>
+  <text x="60" y="312" class="desc">✓ interligne (w:spacing line/lineRule)      ✓ espace avant/après + autospacing      ✓ indentation (left/right/1re ligne/hanging)</text>
+  <text x="60" y="336" class="desc">✓ tailles + TITRES (héritage du style de paragraphe)      ✓ puces réelles (Wingdings → Unicode ➢ ▪ •)</text>
+  <text x="60" y="360" class="desc">✓ tableaux (largeurs de colonnes tblGrid, bordures, fond de cellule)      ✓ table des matières (points de suite + n°)</text>
+  <text x="60" y="384" class="desc">✓ en-têtes + pieds de page (Page X sur Y)      ✓ suivi de modifications (texte barré)      ✓ images (data URI)</text>
+
+  <!-- limites -->
+  <text x="40" y="446" class="lbl">Limites du rendu EN FLUX → utiliser office-to-pdf.mjs (LibreOffice) pour le pixel-perfect</text>
+  <rect x="40" y="460" width="1000" height="110" rx="12" fill="#fef2f2" stroke="#fca5a5"/>
+  <text x="60" y="486" class="desc">✗ collage de page de garde : images FLOTTANTES en position absolue (wp:anchor) — incompatible avec la pagination en flux</text>
+  <text x="60" y="510" class="desc">   (élément absolu = 0 hauteur → dispersé par le paginateur) → images rendues EN FLUX (visibles mais pas en collage).</text>
+  <text x="60" y="534" class="desc">✗ recoloration d'image (duotone/teinte), couleur de révision par auteur, en-tête à logos strictement côte-à-côte.</text>
+  <text x="60" y="556" class="note">Ces cas exigent un vrai moteur de mise en page = LibreOffice. Le HTML reste excellent pour tout le CONTENU.</text>
+</svg>

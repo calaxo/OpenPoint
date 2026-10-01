@@ -1,0 +1,30 @@
+{
+  "name": "openpoint",
+  "version": "1.0.0",
+  "description": "Boîte à outils de reverse-engineering du moteur d'animation PowerPoint + moteur de rendu Office (PPTX/DOCX/charts) vers Web (SVG/HTML) en JS pur, sans PowerPoint ni Word.",
+  "main": "renderer/pptx-render.mjs",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "test:watch": "node --test --watch"
+  },
+  "keywords": [
+    "pptx",
+    "docx",
+    "ooxml",
+    "presentationml",
+    "svg",
+    "renderer",
+    "reverse-engineering",
+    "openpoint"
+  ],
+  "author": "OpenPoint contributors",
+  "license": "ISC",
+  "dependencies": {
+    "fast-xml-parser": "^5.10.1",
+    "fflate": "^0.8.3",
+    "pixelmatch": "^7.2.0",
+    "pngjs": "^7.0.0",
+    "puppeteer": "^25.3.0"
+  }
+}

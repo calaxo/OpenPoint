@@ -1,0 +1,18 @@
+node_modules/
+renderer/ref/*.pdf
+renderer/_work/
+renderer/player-out.html
+
+# docs OOXML deposes localement (droits ISO/ECMA) — sauf le README
+docs/ooxml/specs/*
+!docs/ooxml/specs/README.md
+
+# rendus PDF/artefacts LibreOffice
+renderer/*.pdf
+renderer/.lo-profile/
+renderer/docx-out.html
+renderer/viewer.html
+renderer/player-out.html
+
+renderer/.qa-baseline.json
+*.docx

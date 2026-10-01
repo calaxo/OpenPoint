@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 620" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <style>
+    .title{font-size:24px;font-weight:700;fill:#0f172a}
+    .sub{font-size:13px;fill:#64748b}
+    .lbl{font-size:14px;font-weight:700;fill:#0f172a}
+    .desc{font-size:11.5px;fill:#334155}
+    .file{font-size:11px;font-weight:700;fill:#1e293b;font-family:Consolas,monospace}
+    .step{font-size:12px;font-weight:700;fill:#fff}
+    .edge{stroke:#2563eb;stroke-width:2.5;fill:none;marker-end:url(#a2)}
+    .note{font-size:11px;fill:#475569}
+  </style>
+  <defs><marker id="a2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0 0 L7 3 L0 6 z" fill="#2563eb"/></marker></defs>
+
+  <text x="40" y="44" class="title">Pipeline PPTX — renderer/pptx-render.mjs</text>
+  <text x="40" y="66" class="sub">renderSlide(pptDir, n) : un fichier .pptx → un SVG par diapo (viewBox 960×540, unités = points)</text>
+
+  <!-- étapes horizontales -->
+  <!-- 1 unzip -->
+  <rect x="40" y="100" width="150" height="70" rx="10" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+  <text x="115" y="128" text-anchor="middle" class="lbl">1 · Décompression</text>
+  <text x="115" y="147" text-anchor="middle" class="desc">unzip (fflate)</text>
+  <text x="115" y="162" text-anchor="middle" class="desc">→ ppt/slides/…</text>
+
+  <!-- 2 contexte -->
+  <rect x="220" y="100" width="180" height="70" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="310" y="124" text-anchor="middle" class="lbl">2 · loadContext()</text>
+  <text x="310" y="142" text-anchor="middle" class="desc">thème du MASTER,</text>
+  <text x="310" y="157" text-anchor="middle" class="desc">clrMap, txStyles, polices</text>
+
+  <!-- 3 composition -->
+  <rect x="430" y="100" width="200" height="70" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="530" y="124" text-anchor="middle" class="lbl">3 · Composition</text>
+  <text x="530" y="142" text-anchor="middle" class="desc">masque → layout → diapo</text>
+  <text x="530" y="157" text-anchor="middle" class="desc">data-spid préfixé m/l</text>
+
+  <!-- 4 walk shapes -->
+  <rect x="660" y="100" width="180" height="70" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="750" y="124" text-anchor="middle" class="lbl">4 · walk(spTree)</text>
+  <text x="750" y="142" text-anchor="middle" class="desc">chaque forme / image /</text>
+  <text x="750" y="157" text-anchor="middle" class="desc">groupe / tableau</text>
+
+  <!-- 5 SVG -->
+  <rect x="890" y="100" width="150" height="70" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="965" y="128" text-anchor="middle" class="lbl">5 · SVG</text>
+  <text x="965" y="147" text-anchor="middle" class="desc">+ &lt;defs&gt; (clips,</text>
+  <text x="965" y="162" text-anchor="middle" class="desc">gradients, filtres)</text>
+
+  <path d="M190 135 L220 135" class="edge"/>
+  <path d="M400 135 L430 135" class="edge"/>
+  <path d="M630 135 L660 135" class="edge"/>
+  <path d="M840 135 L890 135" class="edge"/>
+
+  <!-- détail forme (étape 4 éclatée) -->
+  <text x="40" y="230" class="lbl">Détail d'une forme (étape 4)</text>
+  <rect x="40" y="244" width="1000" height="150" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="4 4"/>
+
+  <rect x="60" y="266" width="180" height="56" rx="9" fill="#fff" stroke="#2563eb"/>
+  <text x="150" y="289" text-anchor="middle" class="lbl">Géométrie</text>
+  <text x="150" y="308" text-anchor="middle" class="file">preset-geom.mjs</text>
+
+  <rect x="270" y="266" width="180" height="56" rx="9" fill="#fff" stroke="#2563eb"/>
+  <text x="360" y="289" text-anchor="middle" class="lbl">Remplissage / trait</text>
+  <text x="360" y="308" text-anchor="middle" class="desc">solide · dégradé · thème</text>
+
+  <rect x="480" y="266" width="180" height="56" rx="9" fill="#fff" stroke="#2563eb"/>
+  <text x="570" y="289" text-anchor="middle" class="lbl">Texte</text>
+  <text x="570" y="308" text-anchor="middle" class="desc">foreignObject + autofit</text>
+
+  <rect x="690" y="266" width="180" height="56" rx="9" fill="#fff" stroke="#2563eb"/>
+  <text x="780" y="289" text-anchor="middle" class="lbl">Images</text>
+  <text x="780" y="308" text-anchor="middle" class="desc">clip forme · EMF→PNG</text>
+
+  <rect x="900" y="266" width="120" height="56" rx="9" fill="#fff" stroke="#2563eb"/>
+  <text x="960" y="289" text-anchor="middle" class="lbl">Effets</text>
+  <text x="960" y="308" text-anchor="middle" class="desc">ombre/glow</text>
+
+  <text x="60" y="352" class="note">• Héritage : la forme hérite géométrie + fill + style de texte de son placeholder de LAYOUT (type:idx), puis du MASTER.</text>
+  <text x="60" y="372" class="note">• IDs de &lt;defs&gt; préfixés par diapo (s&lt;n&gt;_clip0…) — sinon collision quand plusieurs diapos coexistent (viewer.html).</text>
+
+  <!-- animations -->
+  <text x="40" y="446" class="lbl">Animations (mode présentation uniquement)</text>
+  <rect x="40" y="460" width="1000" height="120" rx="12" fill="#fff7ed" stroke="#f59e0b" stroke-dasharray="4 4"/>
+  <rect x="60" y="482" width="220" height="56" rx="9" fill="#fff" stroke="#d97706"/>
+  <text x="170" y="505" text-anchor="middle" class="lbl">extractTiming()</text>
+  <text x="170" y="524" text-anchor="middle" class="desc">&lt;p:timing&gt; → étapes de clic</text>
+  <path d="M280 510 L340 510" class="edge"/>
+  <rect x="340" y="482" width="240" height="56" rx="9" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="460" y="505" text-anchor="middle" class="lbl">build-player.mjs</text>
+  <text x="460" y="524" text-anchor="middle" class="desc">rejoue au clic (data-spid)</text>
+  <text x="620" y="500" class="note">SMIL &lt;p:timing&gt; : séquence → 1 nœud gelé par clic → effets (fade/wipe/zoom…) → 8 behaviors.</text>
+  <text x="620" y="520" class="note">« Avec/Après le précédent » = délais absolus pré-calculés. Cf. docs/moteur-animation.md.</text>
+  <text x="620" y="540" class="note">build.mjs (viewer) n'utilise PAS les animations : il affiche l'état final de chaque diapo.</text>
+</svg>

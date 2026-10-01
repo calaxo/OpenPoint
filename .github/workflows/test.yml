@@ -1,0 +1,25 @@
+name: Tests (node:test)
+
+# Intégration continue — exécute la suite de tests à chaque push/PR.
+# Les tests unitaires (node:test, zéro dépendance de test) tournent à chaque push/PR.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20 # 20 LTS : node --test stable
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+      - name: Install deps
+        run: npm ci
+      - name: Run tests
+        run: npm test

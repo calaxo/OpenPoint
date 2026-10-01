@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 760" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <style>
+    .title  { font-size: 26px; font-weight: 700; fill: #0f172a; }
+    .sub    { font-size: 14px; fill: #64748b; }
+    .box    { rx: 12; ry: 12; stroke-width: 2; }
+    .lbl    { font-size: 15px; font-weight: 700; fill: #0f172a; }
+    .desc   { font-size: 12px; fill: #334155; }
+    .file   { font-size: 11.5px; font-weight: 700; fill: #1e293b; font-family: Consolas, monospace; }
+    .grp    { font-size: 13px; font-weight: 700; fill: #475569; letter-spacing: .5px; }
+    .edge   { stroke: #475569; stroke-width: 2; fill: none; marker-end: url(#arr); }
+    .edged  { stroke: #94a3b8; stroke-width: 2; fill: none; stroke-dasharray: 5 4; marker-end: url(#arr); }
+    .pill   { font-size: 11px; fill: #fff; font-weight: 700; }
+  </style>
+  <defs>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0 0 L7 3 L0 6 z" fill="#475569"/></marker>
+  </defs>
+
+  <text x="40" y="46" class="title">OpenPoint — moteur de rendu Office → Web · carte des modules</text>
+  <text x="40" y="70" class="sub">renderer/ · qui fait quoi. Bleu = moteurs · Vert = sorties · Ambre = qualité/oracle · Gris = support</text>
+
+  <!-- ENTREE -->
+  <rect x="430" y="96" width="220" height="56" class="box" fill="#eef2ff" stroke="#6366f1"/>
+  <text x="540" y="120" text-anchor="middle" class="lbl">Fichier Office</text>
+  <text x="540" y="139" text-anchor="middle" class="file">.pptx  ·  .docx</text>
+
+  <rect x="430" y="176" width="220" height="52" class="box" fill="#e0e7ff" stroke="#6366f1"/>
+  <text x="540" y="197" text-anchor="middle" class="lbl">render.mjs</text>
+  <text x="540" y="215" text-anchor="middle" class="desc">aiguilleur : .pptx→PPTX · .docx→DOCX</text>
+  <path d="M540 152 L540 176" class="edge"/>
+
+  <!-- ================= PPTX ================= -->
+  <text x="70" y="270" class="grp">PPTX  (PresentationML — diapos positionnées, animations)</text>
+  <rect x="60" y="284" width="440" height="360" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="4 4"/>
+
+  <!-- moteur PPTX -->
+  <rect x="90" y="300" width="240" height="70" class="box" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="210" y="326" text-anchor="middle" class="lbl">pptx-render.mjs</text>
+  <text x="210" y="345" text-anchor="middle" class="desc">CŒUR : renderSlide()</text>
+  <text x="210" y="361" text-anchor="middle" class="desc">PPTX → SVG (1 diapo)</text>
+  <path d="M470 228 Q470 335 330 335" class="edge"/>
+
+  <!-- support -->
+  <rect x="352" y="300" width="120" height="34" class="box" fill="#e2e8f0" stroke="#64748b"/>
+  <text x="412" y="322" text-anchor="middle" class="file">preset-geom</text>
+  <rect x="352" y="340" width="120" height="30" class="box" fill="#e2e8f0" stroke="#64748b"/>
+  <text x="412" y="360" text-anchor="middle" class="file">metafiles</text>
+  <path d="M352 317 L330 322" class="edged"/>
+  <path d="M352 353 L330 348" class="edged"/>
+
+  <!-- sorties PPTX -->
+  <rect x="90" y="410" width="185" height="86" class="box" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="182" y="433" text-anchor="middle" class="lbl">build.mjs</text>
+  <text x="182" y="451" text-anchor="middle" class="desc">viewer.html</text>
+  <text x="182" y="468" text-anchor="middle" class="desc">toutes les diapos,</text>
+  <text x="182" y="483" text-anchor="middle" class="desc">en DÉFILEMENT</text>
+
+  <rect x="300" y="410" width="185" height="86" class="box" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="392" y="433" text-anchor="middle" class="lbl">build-player.mjs</text>
+  <text x="392" y="451" text-anchor="middle" class="desc">player-out.html</text>
+  <text x="392" y="468" text-anchor="middle" class="desc">mode PRÉSENTATION,</text>
+  <text x="392" y="483" text-anchor="middle" class="desc">animations au clic</text>
+
+  <path d="M180 370 L182 410" class="edge"/>
+  <path d="M250 370 Q360 388 392 410" class="edge"/>
+
+  <!-- QA PPTX -->
+  <rect x="90" y="516" width="395" height="110" class="box" fill="#fef3c7" stroke="#d97706"/>
+  <text x="108" y="538" class="grp">Qualité / oracle (comparaison à PowerPoint COM)</text>
+  <rect x="104" y="550" width="110" height="30" class="box" fill="#fff" stroke="#d97706"/>
+  <text x="159" y="570" text-anchor="middle" class="file">check.mjs</text>
+  <rect x="222" y="550" width="110" height="30" class="box" fill="#fff" stroke="#d97706"/>
+  <text x="277" y="570" text-anchor="middle" class="file">sweep(-all)</text>
+  <rect x="340" y="550" width="130" height="30" class="box" fill="#fff" stroke="#d97706"/>
+  <text x="405" y="570" text-anchor="middle" class="file">compare · scan</text>
+  <text x="108" y="602" class="desc">check = 0 erreur/diapo · sweep = diff pixel vs réf · compare = diff 2 images</text>
+  <text x="108" y="618" class="desc">scan = inventaire des fonctionnalités DrawingML du corpus</text>
+  <path d="M210 370 Q150 440 150 516" class="edged"/>
+
+  <!-- ================= DOCX ================= -->
+  <text x="600" y="270" class="grp">DOCX  (WordprocessingML — texte en flux)</text>
+  <rect x="590" y="284" width="440" height="360" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="4 4"/>
+
+  <rect x="620" y="300" width="270" height="70" class="box" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="755" y="326" text-anchor="middle" class="lbl">docx-build.mjs</text>
+  <text x="755" y="345" text-anchor="middle" class="desc">CŒUR : renderDocx()</text>
+  <text x="755" y="361" text-anchor="middle" class="desc">DOCX → HTML en flux</text>
+  <path d="M610 228 Q610 335 620 335" class="edge"/>
+
+  <rect x="620" y="410" width="270" height="96" class="box" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="755" y="433" text-anchor="middle" class="lbl">docx-out.html</text>
+  <text x="755" y="452" text-anchor="middle" class="desc">flux + PAGINATION CLIENT</text>
+  <text x="755" y="468" text-anchor="middle" class="desc">→ pages A4 uniformes</text>
+  <text x="755" y="490" text-anchor="middle" class="desc">titres · listes · tableaux · TOC · en-têtes/pieds</text>
+  <path d="M755 370 L755 410" class="edge"/>
+
+  <rect x="620" y="526" width="270" height="60" class="box" fill="#fef3c7" stroke="#d97706"/>
+  <text x="755" y="549" text-anchor="middle" class="lbl">docx-check.mjs</text>
+  <text x="755" y="568" text-anchor="middle" class="desc">QA batch : crash + texte/img/tbl</text>
+  <path d="M700 370 Q660 450 700 526" class="edged"/>
+
+  <!-- ================= FIDÈLE (LibreOffice) ================= -->
+  <rect x="60" y="668" width="970" height="72" rx="14" fill="#f1f5f9" stroke="#0ea5e9"/>
+  <text x="80" y="696" class="lbl">office-to-pdf.mjs</text>
+  <text x="80" y="716" class="desc">rendu FIDÈLE pixel-perfect via LibreOffice (vrai moteur de mise en page) → PDF.</text>
+  <text x="80" y="732" class="desc">Pour ce que le flux HTML ne peut pas reproduire : collage de page de garde, pagination exacte. Gère .pptx ET .docx.</text>
+  <path d="M300 644 L500 668" class="edged"/>
+  <path d="M780 644 L640 668" class="edged"/>
+  <text x="900" y="700" class="grp">Oracle = vérité</text>
+  <text x="900" y="718" class="desc">PowerPoint COM (pptx)</text>
+  <text x="900" y="734" class="desc">LibreOffice (docx/pptx)</text>
+</svg>
