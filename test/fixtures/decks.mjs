@@ -110,6 +110,7 @@ const KINDS = {
   grow:      { id: 6,  cls: 'emph', sub: 0, scale: true },
   motion:    { id: 0,  cls: 'path', sub: 0, path: 'M 0 0 L 0.25 0.1 E' },
   spin:      { id: 8,  cls: 'emph', sub: 0, rot: 21600000 },
+  flyLeft:   { id: 2,  cls: 'entr', sub: 8, fly: true },
 };
 let _ctn = 0;
 const ctnId = () => ++_ctn;
@@ -128,7 +129,9 @@ const fx = (spid, kind, { par, delay = 0, dur = 500, node = 'clickEffect' } = {}
   if (k.cls === 'entr') {
     beh = bhvrSet(spid, par, 'visible');
     if (k.zoom) beh += bhvrAnim(spid, par, 'ppt_w', '0', '#ppt_w', dur) + bhvrAnim(spid, par, 'ppt_h', '0', '#ppt_h', dur);
-    beh += bhvrEffect(spid, par, 'in', k.filter, dur);
+    // « Venir de la gauche » : PowerPoint anime ppt_x depuis hors diapo (pas d'animEffect)
+    if (k.fly) beh += bhvrAnim(spid, par, 'ppt_x', '0-#ppt_w/2', '#ppt_x', dur) + bhvrAnim(spid, par, 'ppt_y', '#ppt_y', '#ppt_y', dur);
+    else beh += bhvrEffect(spid, par, 'in', k.filter, dur);
   } else if (k.cls === 'exit') {
     beh = bhvrEffect(spid, par, 'out', k.filter, dur) + bhvrSet(spid, par, 'hidden').replace('delay="0"', `delay="${dur}"`);
   } else if (k.scale) {
@@ -295,6 +298,9 @@ function animationsDeck() {
   // 9 : 1re étape automatique (« après le précédent » en tête de diapo), puis un clic
   slides.push(slide({ shapes: [label(2, 'Démarrage automatique puis clic'), box(3, 'Auto', 100, '2E75B6'), box(4, 'Clic', 420, 'ED7D31')],
     timing: timing([[[fx(3, 'fade', { node: 'afterEffect' })]], [[fx(4, 'fade')]]], '', { autoFirst: true }) }));
+  // 10 : entrée « Venir de la gauche » (fly) puis emphase « Agrandir » (scale 150 %)
+  slides.push(slide({ shapes: [label(2, 'Venir de la gauche, puis agrandir'), box(3, 'Arrive', 100, '7030A0'), box(4, 'Grandit', 420, '70AD47')],
+    timing: timing([[[fx(3, 'flyLeft', { dur: 700 })]], [[fx(4, 'grow', { dur: 600 })]]]) }));
   return assemble(slides);
 }
 

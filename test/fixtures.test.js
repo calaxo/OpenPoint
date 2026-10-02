@@ -97,7 +97,7 @@ test('animations d.5 : trajectoire (animMotion) et rotation (animRot)', () => {
 
 test('animations d.6-8 : transitions fade / push u / morph', () => {
   assert.deepEqual(extractTransition(ppt('animations'), 6), { type: 'fade', dur: 700, dir: null });
-  assert.deepEqual(extractTransition(ppt('animations'), 7), { type: 'push', dur: 2000, dir: 'u' });
+  assert.deepEqual(extractTransition(ppt('animations'), 7), { type: 'push', dur: 750, dir: 'u' });
   assert.deepEqual(extractTransition(ppt('animations'), 8), { type: 'morph', dur: 1500, dir: null });
   assert.equal(extractTransition(ppt('animations'), 1), null);
   assert.deepEqual(extractTiming(ppt('animations'), 6).steps, []);
@@ -197,4 +197,16 @@ test('text d.4 : placeholder « titre idx=7 » sans équivalent exact -> style d
   const span = svg.slice(svg.lastIndexOf('<span', i), i);
   assert.match(span, /font-size:32\.00px/); // titleStyle du master : sz 3200
   assert.match(span, /font-weight:700/);    // b="1"
+});
+
+test('animations : métadonnées d\'effet (preset, zoom, scale, fly)', () => {
+  const s1 = extractTiming(ppt('animations'), 1).steps;
+  assert.equal(s1[2].effects[0].preset, 53);
+  assert.equal(s1[2].effects[0].zoom, true);   // ppt_w / ppt_h depuis 0
+  assert.equal(s1[0].effects[0].zoom, false);
+  assert.deepEqual(extractTiming(ppt('animations'), 3).steps[1].effects[0].scale, { x: 1.5, y: 1.5 });
+  const s10 = extractTiming(ppt('animations'), 10).steps;
+  assert.equal(s10[0].effects[0].fly, 'l');
+  assert.equal(s10[0].effects[0].subtype, 8);
+  assert.deepEqual(s10[1].effects[0].scale, { x: 1.5, y: 1.5 });
 });

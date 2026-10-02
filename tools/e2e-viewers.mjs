@@ -174,7 +174,8 @@ try {
     await page.keyboard.press('Home'); await settle(page);
     check((await body(page)).pos === '1', 'Début : diapo 1');
     await page.keyboard.press('End'); await settle(page);
-    check((await body(page)).pos === '9', 'Fin : diapo 9');
+    const lastPos = String(buildDecks().animations['ppt/presentation.xml'].match(/<p:sldId /g).length);
+    check((await body(page)).pos === lastPos, `Fin : dernière diapo (${lastPos})`);
     // numéro + Entrée
     await page.keyboard.press('3'); await page.keyboard.press('Enter'); await settle(page);
     check((await body(page)).pos === '3', '3 + Entrée : diapo 3');

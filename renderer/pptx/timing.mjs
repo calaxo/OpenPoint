@@ -23,6 +23,9 @@ import { P, tagOf, at, kids, byTag, first, deepFind } from './xml.mjs';
 //   d'après @nodeType withEffect / afterEffect du 1er effet).
 // Forme exacte d'un effet : { cls, spid, par: {from,to}|null, filter, transition, motion, delay, dur, node }
 //   node  : @nodeType (clickEffect, withEffect, afterEffect) ou null ;
+//   preset, subtype : @presetID / @presetSubtype (n° d'effet PowerPoint) ou null ;
+//   scale : { x, y } (animScale) | null ; zoom : bool (taille animée depuis/vers 0) ;
+//   fly   : 'l' | 'r' | 't' | 'b' (entrée/sortie « Venir de », côté hors diapo) | null ;
 //   cls   : @presetClass (entr, exit, emph, path, verb, mediacall) ;
 //   motion: { kind:'move', dx, dy, dur, rev } | { kind:'rot', deg, dur, rev } | null.
 // animatedSpids : spids des formes ENTIÈRES qui ont une entrée -> à cacher avant leur 1re apparition.
@@ -94,8 +97,49 @@ export function extractTiming(pptDir, slideNo) {
       filter: animEff ? at(animEff)['@filter'] : null,
       transition: animEff ? at(animEff)['@transition'] : null,
       motion: parseMotion(cTn),
+      preset: a['@presetID'] !== undefined ? +a['@presetID'] : null,
+      subtype: a['@presetSubtype'] !== undefined ? +a['@presetSubtype'] : null,
+      scale: parseScale(cTn), zoom: isZoom(cTn), fly: parseFly(cTn),
       delay: accDelay + ownDelay, dur,
     };
+  }
+  // animScale (emphase « Agrandir/Réduire ») : p:by x/y en 1/1000 de % -> facteurs { x, y } ; null sinon
+  function parseScale(cTn) {
+    const by = deepFind(deepFind(cTn, 'p:animScale') ?? {}, 'p:by');
+    if (!by) return null;
+    return { x: (+at(by)['@x'] || 100000) / 100000, y: (+at(by)['@y'] || 100000) / 100000 };
+  }
+  // valeurs animées d'un attribut (p:anim > p:cBhvr > p:attrNameLst = attr) : chaînes p:tav/p:strVal
+  function animValues(cTn, attr) {
+    const out = [];
+    const visit = (n) => {
+      if (tagOf(n) === 'p:anim') {
+        const names = byTag(first(first(n, 'p:cBhvr') ?? {}, 'p:attrNameLst') ?? {}, 'p:attrName').map((x) => kids(x).map((c) => c['#text'] ?? '').join(''));
+        if (names.includes(attr)) for (const tav of byTag(first(n, 'p:tavLst') ?? {}, 'p:tav')) out.push(at(deepFind(tav, 'p:strVal') ?? {})['@val'] ?? '');
+      }
+      for (const c of kids(n)) if (typeof c === 'object') visit(c);
+    };
+    visit(cTn);
+    return out;
+  }
+  // zoom : la taille (ppt_w / ppt_h) part de 0 (entrée « Zoom », « Agrandir et tourner »…) ou y arrive (sortie)
+  function isZoom(cTn) {
+    const w = animValues(cTn, 'ppt_w');
+    return w.length >= 2 && (w[0] === '0' || w[w.length - 1] === '0');
+  }
+  // « Venir de » (fly) : la position (ppt_x / ppt_y) part de hors diapo — « 0-#ppt_w/2 » (gauche),
+  // « 1+#ppt_w/2 » (droite), idem en y (haut / bas) -> 'l' | 'r' | 't' | 'b' ; null sinon. Pour une
+  // sortie, c'est la DERNIÈRE valeur qui est hors diapo.
+  function parseFly(cTn) {
+    for (const [attr, lo, hi] of [['ppt_x', 'l', 'r'], ['ppt_y', 't', 'b']]) {
+      const v = animValues(cTn, attr);
+      if (v.length < 2) continue;
+      for (const x of [v[0], v[v.length - 1]]) {
+        if (/^0\s*-/.test(x)) return lo;
+        if (/^1\s*\+/.test(x)) return hi;
+      }
+    }
+    return null;
   }
   // mouvement/rotation (§19.5.3 animMotion, §19.5.5 animRot) -> {kind, dx/dy (fractions) | deg, dur, rev}
   // behTiming(comportement) -> { dur (ms, défaut 1000), rev (@autoRev : aller-retour) } lus sur son
@@ -149,5 +193,7 @@ export function extractTransition(pptDir, slideNo) {
              : /<p:fade\b/.test(body) ? 'fade'
              : (body.match(/<p:(push|wipe|cover|split|reveal|zoom|dissolve|cut)\b/)?.[1]) || 'fade';
   const dir = body.match(/<p:(?:push|wipe|cover|split)[^>]*\bdir="([^"]+)"/)?.[1] || null;
-  return { type, dur: dur || 2000, dir };
+  // sans p14:dur : vitesse @spd (PowerPoint : fast 0,5 s, med 0,75 s, slow 1 s ; défaut fast)
+  const spd = opener.match(/\bspd="(\w+)"/)?.[1];
+  return { type, dur: dur || ({ slow: 1000, med: 750 }[spd] ?? 500), dir };
 }

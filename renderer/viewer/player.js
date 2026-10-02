@@ -172,7 +172,10 @@
     if (e.cls === 'entr' || e.cls === 'exit') {
       const clip = clipFrames(e.filter);
       let k0, k1;
-      if (clip) { k0 = { clipPath: clip[0], opacity: 1 }; k1 = { clipPath: clip[1], opacity: 1 }; }
+      if (e.fly) { // « Venir de » : part d'une diapo entière à côté (hors cadre), côté e.fly
+        const sl = shown[cur], off = { l: [-sl.w, 0], r: [sl.w, 0], t: [0, -sl.h], b: [0, sl.h] }[e.fly] || [0, 0];
+        k0 = { opacity: 1, transform: 'translate(' + off[0] + 'px, ' + off[1] + 'px) ' + ta }; k1 = { opacity: 1, transform: ta };
+      } else if (clip) { k0 = { clipPath: clip[0], opacity: 1 }; k1 = { clipPath: clip[1], opacity: 1 }; }
       else if (isZoom(e)) { k0 = { opacity: 0, transform: ta + ' scale(0.3)' }; k1 = { opacity: 1, transform: ta + ' scale(1)' }; }
       else { k0 = { opacity: 0 }; k1 = { opacity: 1 }; }
       return e.cls === 'entr' ? [k0, k1] : [k1, k0];
