@@ -17,7 +17,7 @@
 // renderSlide n'est pas réentrant (état de module dans fonts.mjs, ctx muté) : un appel à la fois.
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { P, PF, cachedParse, tagOf, at, first, serialize } from '../xml.mjs';
+import { P, flatOf, cachedParse, tagOf, at, first } from '../xml.mjs';
 import { u } from '../units.mjs';
 import { loadContext } from '../theme.mjs';
 import { slideRels, relsOf, imageHref, placeholderGeom, slideOrder } from '../parts.mjs';
@@ -83,8 +83,12 @@ export function renderSlide(pptDir, slideNo, opts = {}) {
   rc.body.push(slideBg || layoutBg || masterBg || '');
   // master / layout : placeholders NON dessinés (gabarits), spid préfixés pour ne pas entrer en
   // collision avec ceux de la diapo (que cible la timeline d'animation)
-  if (masterPart) { rc.curRels = masterRels; rc.skipPh = true; rc.spidPfx = 'm'; walk(rc, masterPart.spTree, IDENT); }
-  if (layoutPart) { rc.curRels = layoutRels; rc.skipPh = true; rc.spidPfx = 'l'; walk(rc, layoutPart.spTree, IDENT); }
+  // showMasterSp="0" (« masquer les graphiques d'arrière-plan ») : sur la DIAPO, cache les formes du
+  // layout ET du master ; sur le LAYOUT, cache celles du master. Le fond, lui, reste dessiné.
+  const showLayoutSp = at(sld)['@showMasterSp'] !== '0' && at(sld)['@showMasterSp'] !== 'false';
+  const showMasterSp = showLayoutSp && !['0', 'false'].includes(at(layoutO)['@showMasterSp']);
+  if (masterPart && showMasterSp) { rc.curRels = masterRels; rc.skipPh = true; rc.spidPfx = 'm'; walk(rc, masterPart.spTree, IDENT); }
+  if (layoutPart && showLayoutSp) { rc.curRels = layoutRels; rc.skipPh = true; rc.spidPfx = 'l'; walk(rc, layoutPart.spTree, IDENT); }
   // la diapo : placeholders DESSINÉS, spid bruts
   rc.curRels = rels; rc.skipPh = false; rc.spidPfx = '';
   walk(rc, spTree, IDENT);
@@ -150,7 +154,7 @@ function bgRect(rc, cS) {
   const { ctx, curRels, pptDir, embed, W, H } = rc;
   const bg = cS && first(cS, 'p:bg');
   if (!bg) return '';
-  const bgFlat = PF.parse(`<root xmlns:a="a" xmlns:p="p">${serialize(bg)}</root>`).root['p:bg'];
+  const bgFlat = flatOf(bg)['p:bg'];
   // bgPr : fill direct (solid/grad/blip)
   const bgPr = bgFlat['p:bgPr'];
   if (bgPr) {

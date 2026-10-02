@@ -1,7 +1,7 @@
 // ═══ [DIAPO · CADRES] ═══ p:graphicFrame : graphiques, SmartArt, tableaux, objets OLE (image de secours).
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { P, PF, cachedParse, tagOf, at, byTag, first, deepFind, esc, serialize } from '../xml.mjs';
+import { P, flatOf, cachedParse, tagOf, at, byTag, first, deepFind, esc } from '../xml.mjs';
 import { u } from '../units.mjs';
 import { resolveColorFlat, cssColor } from '../color.mjs';
 import { cellTextHeight } from '../fonts.mjs';
@@ -71,7 +71,7 @@ function renderDiagram(rc, relId, off, ext, tf) {
 // renderGraphicFrame(rc, p:graphicFrame ORDONNÉ, tf) -> fragment SVG (ou '' si délégué / vide).
 // Aiguillage selon le contenu de a:graphicData.
 export function renderGraphicFrame(rc, gf, tf) {
-  const flat = PF.parse(`<root xmlns:a="a" xmlns:p="p" xmlns:r="r">${serialize(gf)}</root>`).root['p:graphicFrame'];
+  const flat = flatOf(gf)['p:graphicFrame'];
   if (!flat) return '';
   const xf = flat['p:xfrm']; const off = xf?.['a:off'], ext = xf?.['a:ext'];
   const gd = flat['a:graphic']?.['a:graphicData'];
@@ -248,10 +248,10 @@ function renderTable(rc, gf, flat, tbl, off, ext, tf) {
         cellLst = { 'a:lvl1pPr': { 'a:defRPr': d } };
       }
       // texte (ancrage vertical depuis tcPr @anchor)
-      const tb = tc['a:txBody'];
-      if (tb) {
-        // mutation SANS risque : `flat` vient d'être re-parsé pour cet appel (pas un arbre en cache)
-        tb['a:bodyPr'] = tb['a:bodyPr'] || {};
+      const tb0 = tc['a:txBody'];
+      if (tb0) {
+        // COPIE du txBody (l'arbre plat peut venir du cache flatOf, partagé : ne jamais le muter)
+        const tb = { ...tb0, 'a:bodyPr': { ...(tb0['a:bodyPr'] || {}) } };
         if (!tb['a:bodyPr']['@anchor'] && tcPr['@anchor']) tb['a:bodyPr']['@anchor'] = tcPr['@anchor'];
         // marges de cellule (tcPr marL/R/T/B, défauts 0,1" / 0,05") -> insets du texte
         for (const [m, ins, dv] of [['@marL','@lIns',91440],['@marR','@rIns',91440],['@marT','@tIns',45720],['@marB','@bIns',45720]])

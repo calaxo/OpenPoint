@@ -115,8 +115,43 @@ function serialize(node) {
   return `<${t}${attrs}>${inner}</${t}>`;
 }
 
-// parseFlat(nœud ordonné) : re-sérialise un sous-arbre ordonné puis le re-parse en arbre PLAT.
-// Le wrapper <root xmlns…> ne sert qu'à fournir une racine (fast-xml-parser ne résout pas les namespaces).
-export const parseFlat = (node) => PF.parse(`<root xmlns:a="a" xmlns:p="p" xmlns:r="r">${serialize(node)}</root>`).root;
+// flatOf(nœud ordonné) -> le même sous-arbre en arbre PLAT (re-sérialisé puis re-parsé), sous une
+// racine factice : flatOf(sp)['p:sp']. Le wrapper <root xmlns…> ne sert qu'à fournir une racine
+// (fast-xml-parser ne résout pas les namespaces).
+// MIS EN CACHE par nœud (WeakMap) : les formes du master/layout sont redessinées sur CHAQUE diapo, et ce
+// re-parse était le premier poste de temps du moteur. Le résultat est donc PARTAGÉ : LECTURE SEULE.
+// La conversion ne passe PAS par du texte XML : toFlat() reproduit la « compression » de fast-xml-parser
+// (node2json.js), qui construit justement l'arbre ordonné avant de l'aplatir. Même résultat, ordre des
+// clés compris (enfants, puis '#text', puis attributs) — vérifié nœud par nœud sur le corpus — mais
+// sans sérialiser ni re-parser (le re-parse était le premier poste de temps du moteur).
+const _flat = new WeakMap();
+export function flatOf(node) {
+  let f = _flat.get(node);
+  if (!f) { f = toFlat([node]); _flat.set(node, f); }
+  return f;
+}
+// toFlat(liste de nœuds ordonnés) -> objet plat (règles de node2json.compress, options du parseur PF) :
+//   - textes frères concaténés dans '#text' (omis s'ils sont vides) ;
+//   - un enfant sans attribut qui ne contient que du texte devient une chaîne ; vide -> '' ;
+//   - attributs ajoutés APRÈS les enfants ; balise répétée -> tableau.
+function toFlat(list) {
+  const out = {};
+  let text;
+  for (const n of list) {
+    const tag = tagOf(n);
+    if (tag === '#text') { text = text === undefined ? n['#text'] : text + '' + n['#text']; continue; }
+    if (tag === undefined) continue;
+    let val = toFlat(n[tag]);
+    const attrs = n[':@'];
+    if (attrs) Object.assign(val, attrs);
+    else { const keys = Object.keys(val); if (keys.length === 1 && val['#text'] !== undefined) val = val['#text']; else if (!keys.length) val = ''; }
+    if (Object.prototype.hasOwnProperty.call(out, tag)) {
+      if (!Array.isArray(out[tag])) out[tag] = [out[tag]];
+      out[tag].push(val);
+    } else out[tag] = val;
+  }
+  if (typeof text === 'string') { if (text.length > 0) out['#text'] = text; } else if (text !== undefined) out['#text'] = text;
+  return out;
+}
 
 export { P, PF, cachedParse, _stamp as fileStamp, tagOf, at, kids, byTag, first, deepFind, deepFindFlat, deepFindSuffix, esc, serialize };

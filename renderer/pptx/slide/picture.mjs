@@ -1,5 +1,5 @@
 // ═══ [DIAPO · IMAGE] ═══ renderPic : image (p:pic).
-import { PF, at, first, deepFind, deepFindSuffix, esc, serialize } from '../xml.mjs';
+import { flatOf, at, first, deepFind, deepFindSuffix, esc } from '../xml.mjs';
 import { u } from '../units.mjs';
 import { presetPath, custGeomPath } from '../geometry.mjs';
 import { imageHref } from '../parts.mjs';
@@ -32,7 +32,7 @@ export function renderPic(rc, pic, tf) {
   for (const id of candidates) { const tgt = curRels[id]; if (tgt) { href = imageHref(pptDir, tgt, embed); if (href) break; } }
   if (!href) return ''; // image non exploitable (ex. .wdp seul) -> ne rien afficher
   // forme de découpe : géométrie propre du pic, sinon celle héritée du placeholder de layout
-  const picFlat = PF.parse(`<root xmlns:a="a" xmlns:p="p" xmlns:r="r">${serialize(pic)}</root>`).root['p:pic'];
+  const picFlat = flatOf(pic)['p:pic'];
   let geomFlat = picFlat['p:spPr'] || {};
   if (!geomFlat['a:prstGeom'] && !geomFlat['a:custGeom'] && inh?.spPr) geomFlat = inh.spPr;
   const prst = geomFlat['a:prstGeom']?.['@prst'];

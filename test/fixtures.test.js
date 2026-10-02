@@ -118,6 +118,13 @@ test('shapes d.2 : lignes, pointillés, têtes de flèche', () => {
   assert.match(svg, /stroke-dasharray/);
   assert.match(svg, /<marker/);
 });
+test('shapes d.2 : forme hidden="1" non dessinée ; showMasterSp="0" masque le décor du master', () => {
+  const { svg } = r('shapes', 2);
+  assert.ok(!plain(svg).includes('NE DOIT PAS'));
+  assert.ok(!spids(svg).includes('9'));
+  assert.ok(!spids(svg).includes('m5'));
+  assert.ok(spids(r('shapes', 1).svg).includes('m5')); // diapo normale : décor du master présent
+});
 test('shapes d.3 : groupes imbriqués, rotation et miroir', () => {
   const { svg } = r('shapes', 3);
   for (const i of ['3', '4', '5', '6', '7', '8', '9', '10']) assert.ok(spids(svg).includes(i), `spid ${i}`);

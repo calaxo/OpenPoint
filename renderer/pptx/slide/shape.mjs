@@ -1,5 +1,5 @@
 // ═══ [DIAPO · FORME] ═══ renderSp : forme (p:sp) ou connecteur (p:cxnSp).
-import { PF, at, first, deepFind, esc, serialize } from '../xml.mjs';
+import { flatOf, at, first, deepFind, esc } from '../xml.mjs';
 import { u } from '../units.mjs';
 import { presetGeomParts, presetTextRect } from '../../preset-geom.mjs';
 import { custGeomParts } from '../geometry.mjs';
@@ -23,7 +23,7 @@ import { renderText } from './text.mjs';
 export function renderSp(rc, sp, tf) {
   const { ctx, curRels, pptDir, embed, uid, clips, spidPfx, phGeom, mphGeom } = rc;
   // version flat du même noeud pour lire fills/geom/txBody
-  const flat = PF.parse(`<root xmlns:a="a" xmlns:p="p">${serialize(sp)}</root>`).root;
+  const flat = flatOf(sp);
   const spFlat = flat['p:sp'] || flat['p:cxnSp'] || flat;
   const spPrO = first(sp, 'p:spPr');
   // placeholder : héritage depuis le layout (géométrie + fill + styles de texte)

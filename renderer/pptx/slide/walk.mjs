@@ -1,6 +1,6 @@
 // ═══ [DIAPO · PARCOURS] ═══ walk() : parcours du spTree (ordre z), aiguillage par type, groupes.
 // Repère : tf = transformation « repère enfant -> repère diapo » : x' = ox + (x - cx0) · sx (idem y).
-import { PF, tagOf, at, kids, first, deepFind, esc, serialize } from '../xml.mjs';
+import { flatOf, tagOf, at, kids, first, deepFind, esc } from '../xml.mjs';
 import { u } from '../units.mjs';
 import { resolveColorFlat, cssColor } from '../color.mjs';
 import { gradId } from './paint.mjs';
@@ -35,6 +35,9 @@ function walkChild(rc, child, tf) {
     if (branch) for (const c of kids(branch)) walkChild(rc, c, tf);
     return;
   }
+  // forme masquée (p:cNvPr@hidden, volet Sélection de PowerPoint) : jamais dessinée. Pour un groupe,
+  // deepFind trouve le cNvPr du GROUPE (nvGrpSpPr précède les membres) : le groupe entier est masqué.
+  if (['1', 'true'].includes(at(deepFind(child, 'p:cNvPr'))['@hidden'])) return;
   // masque/layout : on NE rend PAS les placeholders (la diapo en hérite fill/style).
   if (t === 'p:sp') { if (skipPh && deepFind(child, 'p:ph')) return; body.push(renderSp(rc, child, tf)); }
   // image ESPACE RÉSERVÉ (<p:ph>) à l'intérieur d'un GROUPE : structure que l'interface PowerPoint
@@ -94,7 +97,7 @@ function renderGroup(rc, grp, tf) {
   // pendant le walk des enfants, puis on restaure (gère les groupes imbriqués).
   const prevGrpFill = ctx.grpFill;
   if (gPr) {
-    const gf = PF.parse(`<root xmlns:a="a" xmlns:p="p" xmlns:r="r">${serialize(gPr)}</root>`).root['p:grpSpPr'];
+    const gf = flatOf(gPr)['p:grpSpPr'];
     if (gf?.['a:solidFill']) ctx.grpFill = cssColor(resolveColorFlat(gf['a:solidFill'], ctx));
     else if (gf?.['a:gradFill']) ctx.grpFill = gradId(rc, gf['a:gradFill']);
     else if (gf?.['a:noFill'] !== undefined) ctx.grpFill = 'none';

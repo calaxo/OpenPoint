@@ -58,7 +58,7 @@ const txBody = (paras, bodyPr = '<a:bodyPr wrap="square"><a:noAutofit/></a:bodyP
   `<p:txBody>${bodyPr}<a:lstStyle/>${paras.join('')}</p:txBody>`;
 
 // ───────────────────────── formes ─────────────────────────
-// sp({id,name,x,y,w,h,prst,geom,fill,line,effect,rot,flipH,flipV,paras,bodyPr,ph,txBox})
+// sp({id,name,x,y,w,h,prst,geom,fill,line,effect,rot,flipH,flipV,paras,bodyPr,ph,txBox,hidden})
 const xfrm = (o, tag = 'a:xfrm') =>
   `<${tag}${o.rot ? ` rot="${Math.round(o.rot * 60000)}"` : ''}${o.flipH ? ' flipH="1"' : ''}${o.flipV ? ' flipV="1"' : ''}>`
   + `<a:off x="${E(o.x)}" y="${E(o.y)}"/><a:ext cx="${E(o.w)}" cy="${E(o.h)}"/></${tag}>`;
@@ -69,7 +69,7 @@ const sp = (o) => {
     ? '<p:spPr/>'
     : `<p:spPr>${xfrm(o)}${geom}${o.fill ?? ''}${o.line ?? ''}${o.effect ?? ''}</p:spPr>`;
   const body = o.paras ? txBody(o.paras, o.bodyPr) : (o.ph ? '' : txBody([`<a:p><a:endParaRPr lang="fr-FR"/></a:p>`]));
-  return `<p:sp><p:nvSpPr><p:cNvPr id="${o.id}" name="${esc(o.name ?? 'Forme ' + o.id)}"/><p:cNvSpPr${o.txBox ? ' txBox="1"' : ''}/><p:nvPr>${ph}</p:nvPr></p:nvSpPr>${spPr}${body}</p:sp>`;
+  return `<p:sp><p:nvSpPr><p:cNvPr id="${o.id}" name="${esc(o.name ?? 'Forme ' + o.id)}"${o.hidden ? ' hidden="1"' : ''}/><p:cNvSpPr${o.txBox ? ' txBox="1"' : ''}/><p:nvPr>${ph}</p:nvPr></p:nvSpPr>${spPr}${body}</p:sp>`;
 };
 const cxn = (o) => `<p:cxnSp><p:nvCxnSpPr><p:cNvPr id="${o.id}" name="${esc(o.name ?? 'Connecteur ' + o.id)}"/><p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr>`
   + `<p:spPr>${xfrm(o)}<a:prstGeom prst="${o.prst ?? 'line'}"><a:avLst/></a:prstGeom>${o.line}</p:spPr></p:cxnSp>`;
@@ -88,9 +88,10 @@ const graphicFrame = (o, dataXml) => `<p:graphicFrame><p:nvGraphicFramePr><p:cNv
 
 // ───────────────────────── diapo ─────────────────────────
 // slide({shapes, bg, transition, timing, layout}) -> { xml, layout }
-const slide = ({ shapes, bg = '', transition = '', timing = '', layout = 1, clrMapOvr = '<a:masterClrMapping/>', rels: extra = [], name }) => ({
+// sldAttrs : attributs supplémentaires de <p:sld> (ex. ' showMasterSp="0"', ' show="0"')
+const slide = ({ shapes, bg = '', transition = '', timing = '', layout = 1, clrMapOvr = '<a:masterClrMapping/>', rels: extra = [], name, sldAttrs = '' }) => ({
   layout, rels: extra, name,
-  xml: XML + `<p:sld ${NSDECL}><p:cSld>${name ? '' : ''}${bg ? `<p:bg>${bg}</p:bg>` : ''}<p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>`
+  xml: XML + `<p:sld ${NSDECL}${sldAttrs}><p:cSld>${name ? '' : ''}${bg ? `<p:bg>${bg}</p:bg>` : ''}<p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>`
     + `<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>${shapes.join('')}</p:spTree></p:cSld>`
     + `<p:clrMapOvr>${clrMapOvr}</p:clrMapOvr>${transition}${timing}</p:sld>`,
 });
@@ -193,6 +194,8 @@ const masterXml = XML + `<p:sldMaster ${NSDECL}><p:cSld><p:bg><p:bgPr>${solid('b
   + sp({ id: 3, name: 'Corps maître', ph: 'type="body" idx="1"', x: 36, y: 110, w: 648, h: 260, paras: [para('Texte')] })
   + sp({ id: 4, name: 'Numéro maître', ph: 'type="sldNum" sz="quarter" idx="4"', x: 600, y: 375, w: 84, h: 22,
     paras: [`<a:p><a:fld id="{B6F15528-21DE-4FAA-801E-634DDDAF4B2B}" type="slidenum"><a:rPr lang="fr-FR" sz="1000"/><a:t>‹#›</a:t></a:fld></a:p>`] })
+  // décoration du master (non placeholder) : visible sur toutes les diapos sauf showMasterSp="0"
+  + sp({ id: 5, name: 'Bandeau maître', x: 0, y: 400, w: 720, h: 5, fill: solid('accent1') })
   + `</p:spTree></p:cSld>`
   + `<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/>`
   + `<p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/><p:sldLayoutId id="2147483650" r:id="rId2"/></p:sldLayoutIdLst>`
@@ -310,13 +313,14 @@ function shapesDeck() {
     sp({ id: 13, name: 'Ombre', x: 30, y: 290, w: 160, h: 80, prst: 'rect', fill: solid('FFFFFF'), line: ln('404040', 1), effect: shadow,
       paras: [para('Avec ombre', { algn: 'ctr', r: { sz: 16 } })] }),
   ] }));
-  // 2 : lignes, flèches, tirets
+  // 2 : lignes, flèches, tirets (+ une forme masquée hidden="1", + décor du master masqué showMasterSp="0")
   const lineRow = (id, y, dash, head, tail, color) => cxn({ id, name: `ligne ${dash ?? 'solid'}`, x: 60, y, w: 600, h: 0, line: ln(color, 3, { dash, head, tail }) });
   slides.push(slide({ shapes: [label(2, 'Lignes, flèches et tirets'),
     lineRow(3, 70, null, null, 'triangle', '2E75B6'), lineRow(4, 120, 'dash', 'oval', 'arrow', 'ED7D31'), lineRow(5, 170, 'sysDot', 'diamond', 'stealth', '70AD47'),
     lineRow(6, 220, 'dashDot', null, null, '7030A0'), lineRow(7, 270, 'lgDash', 'arrow', null, 'C00000'),
     cxn({ id: 8, name: 'diagonale', x: 60, y: 300, w: 200, h: 80, line: ln('404040', 2, { tail: 'triangle' }) }),
-  ] }));
+    sp({ id: 9, name: 'Masquée', x: 400, y: 300, w: 120, h: 60, fill: solid('FF00FF'), hidden: true, paras: [para('NE DOIT PAS APPARAÎTRE')] }),
+  ], sldAttrs: ' showMasterSp="0"' }));
   // 3 : groupes imbriqués, forme tournée + miroir
   const inner = grp({ id: 5, name: 'Groupe interne', x: 40, y: 20, w: 140, h: 80, child: { x: 0, y: 0, w: 280, h: 160 } }, [
     sp({ id: 6, name: 'Interne A', x: 0, y: 0, w: 130, h: 160, fill: solid('2E75B6') }),

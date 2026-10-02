@@ -1,7 +1,7 @@
 // ═══ [PPTX · PARTS OPC] ═══ relations (.rels), images (data URI), placeholders hérités du layout/master.
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { cachedParse } from './xml.mjs';
+import { cachedParse, fileStamp as _stamp } from './xml.mjs';
 // ████ §M ─ RELATIONS (.rels) ET IMAGES ─────────────────────────────────────────────────────────
 // Chaque part OOXML référence les autres (layout, master, thème, images, graphiques…) par un
 // identifiant r:id / r:embed (« rId3 ») résolu dans son fichier _rels/<part>.rels (OPC, ECMA-376
@@ -54,8 +54,14 @@ function imageHref(pptDir, target, embed) {
   if (existsSync(abs + '.webp')) { abs += '.webp'; ext = 'webp'; }
   const mime = MIME[ext];
   if (!mime) return null;
-  return `data:${mime};base64,` + readFileSync(abs).toString('base64');
+  // cache : une image du master/layout est référencée par CHAQUE diapo ; sans cache, elle était relue et
+  // ré-encodée en base64 à chaque fois. Clé = chemin + signature mtime/taille (invalidée si le fichier change).
+  const sig = abs + '|' + _stamp(abs);
+  let uri = _dataUris.get(sig);
+  if (!uri) { uri = `data:${mime};base64,` + readFileSync(abs).toString('base64'); _dataUris.set(sig, uri); }
+  return uri;
 }
+const _dataUris = new Map(); // « chemin|signature » -> data URI ; jamais purgé (taille = médias vus)
 
 // ████ §N ─ PLACEHOLDERS (HÉRITAGE DEPUIS LE LAYOUT) ────────────────────────────────────────────
 // Règle PresentationML (p:ph, §19.3.1.36) : une forme <p:sp><p:nvSpPr><p:nvPr><p:ph type idx/> de la

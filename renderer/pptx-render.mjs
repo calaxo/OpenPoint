@@ -78,7 +78,7 @@
  *    - Les arbres renvoyés par cachedParse sont PARTAGÉS entre diapos : ne JAMAIS les muter.
  *    - renderSlide n'est pas réentrant (ctx muté pendant le rendu, police mineure dans fonts.mjs).
  *    - Jamais de commentaire JS dans une chaîne / un gabarit `…` : il partirait dans le SVG.
- *    - Non gérés : p:sld@showMasterSp / cNvPr@hidden, custGeom HÉRITÉ du layout (repli rectangle),
+ *    - Non gérés : custGeom HÉRITÉ du layout (repli rectangle),
  *      géométrie de placeholder héritée du MASTER (seul son style de texte est lu).
  * ═══════════════════════════════════════════════════════════════════════════════════════════════ */
 
