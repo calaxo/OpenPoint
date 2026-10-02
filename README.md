@@ -1,12 +1,35 @@
-# OpenPoint — moteur de rendu Office → Web (+ reverse du moteur d'animation PowerPoint)
+# OpenPoint — PowerPoint (.pptx) → Web, en JavaScript pur
 
-> ## 👉 Nouveau sur le projet ? Commence par **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
-> Vue d'ensemble illustrée (schémas SVG) : *qui fait quoi* entre le **viewer** (défilement), le mode
-> **présentation** (animé), le moteur **PowerPoint**, le moteur **Word**, la voie **PDF fidèle**, et le
-> lien avec la **plateforme** d'apprentissage. Carte du code : **[renderer/README.md](renderer/README.md)**.
->
-> Aujourd'hui ce dépôt est surtout un **moteur de rendu** `.pptx`/`.docx` → HTML/SVG en JS pur (sans
-> PowerPoint/Word). La partie ci-dessous documente son **origine** : le reverse du moteur d'animation.
+Convertit une présentation `.pptx` en pages Web autonomes **sans PowerPoint ni LibreOffice** : chaque
+diapo devient un SVG fidèle (formes, texte, images, tableaux, graphiques, thèmes), et les animations
+et transitions sont rejouées. Un moteur Word (`.docx` → HTML) est aussi inclus.
+
+## Démarrage rapide
+
+```bash
+npm install
+node renderer/build.mjs deck.pptx          # viewer en défilement  -> renderer/viewer.html
+node renderer/build-player.mjs deck.pptx   # mode présentation     -> renderer/player-out.html
+```
+
+Chaque sortie est **un seul fichier HTML** qui s'ouvre sans serveur (images dédupliquées, polices
+embarquées). Pas de deck sous la main ? `npm run fixtures` génère des decks d'exemple dans
+`test/fixtures/out/`.
+
+- **Viewer en défilement** : toutes les diapos empilées, barre d'outils, saut direct (`#12`), clavier
+  (j/k, flèches), diapos masquées signalées, chargement progressif.
+- **Mode présentation** : une diapo à la fois, animations au clic (fondu, balayage, zoom, venir de,
+  trajectoire, rotation, agrandissement, par paragraphe…), étapes « après le précédent » automatiques,
+  transitions de diapo, clavier / tactile / plein écran, lien direct `#3`, contrôles qui s'effacent.
+
+## Contribuer
+
+**Lire [AGENTS.md](AGENTS.md)** (humains comme assistants IA) : carte du code, règles à ne pas enfreindre
+et protocole de vérification (`npm test`, `npm run lint`, `npm run diff`, `npm run test:e2e`).
+Vue d'ensemble illustrée : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · carte de `renderer/` :
+[renderer/README.md](renderer/README.md).
+
+## Origine : le reverse du moteur d'animation PowerPoint
 
 Étude née d'un besoin concret : impossible de sortir proprement des decks PowerPoint
 riches en animations. Avant de retenter quoi que ce soit, ce repo répond à la question préalable :
@@ -19,12 +42,7 @@ Pour comprendre le format à fond et savoir quoi implémenter ensuite :
 code), concepts/pièges, questions ouvertes. Les docs techniques se déposent dans
 `docs/ooxml/specs/` (local, non commité).
 
-## Lire un PPTX sans PowerPoint (le cas d'usage pratique)
-
-Moteur de rendu maison **PPTX → SVG en JS pur**, sans PowerPoint : voir
-**[docs/lecteur-pptx.md](docs/lecteur-pptx.md)**. Rend les 28 diapos du deck fidèlement (thème
-sombre, masque/layout, coins arrondis, images, texte hérité). `node renderer/build.mjs` →
-`renderer/viewer.html`. Validé contre un rendu de référence LibreOffice.
+Historique du moteur de rendu : [docs/lecteur-pptx.md](docs/lecteur-pptx.md).
 
 ---
 

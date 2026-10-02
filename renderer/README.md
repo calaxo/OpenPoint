@@ -7,8 +7,9 @@
 
 | Fichier | Rôle |
 |---|---|
-| **`pptx-render.mjs`** | Cœur **PPTX** → SVG. `renderSlide()`, `loadContext()`, `extractTiming()`. Le plus gros fichier ; toute modif se re-teste avec `check.mjs` **et `qa.mjs`**. |
-| **`chart-render.mjs`** | Rend un **graphique** (`c:chart`) → SVG (colonnes/barres/lignes/aires/camembert/nuage + titre/légende/étiquettes). Appelé par `pptx-render.mjs` (dispatch `renderTable`). |
+| **`pptx-render.mjs`** | Façade du cœur **PPTX** → SVG : `renderSlide()`, `extractTiming()`, `extractTransition()`, `slideOrder()`, `loadContext()`. |
+| **`pptx/`** | Le moteur PPTX en modules (XML, couleurs, thème, parts, polices, géométrie, animations ; `pptx/slide/` : composition, formes, images, cadres, texte, peinture, effets). Carte : `../AGENTS.md`. |
+| **`chart-render.mjs`** | Rend un **graphique** (`c:chart`) → SVG (colonnes/barres/lignes/aires/camembert/nuage + titre/légende/étiquettes). Appelé par `pptx/slide/frame.mjs`. |
 | **`docx-build.mjs`** | Cœur **DOCX** → HTML. `renderDocx()`. **Autonome** : ne dépend pas du PPTX. |
 
 ## Les sorties (quoi lancer)
@@ -73,7 +74,6 @@ par `npm run lint`. Test de bout en bout dans Chrome : `npm run test:e2e` (`tool
 
 - **Couche hôte** (file de rendu, cache, livraison, iframe sandbox, runtime d'animation, front) : hors de ce dépôt — ce dépôt produit les pages Web que la plateforme d'apprentissage intègre.
 - **Plus d'autofit dans le navigateur** : `build`/`build-player`/`sweep` affichent le SVG tel quel, comme en sortie finale.
-- **Ne pas casser le PPTX** : `pptx-render.mjs` est le cœur. Après modif → `check.mjs` sur un corpus de
-  référence local = **0 erreur**.
-- Tag git `pptx-stable` = point de retour connu-bon.
+- **Ne pas casser le PPTX** : après modif → `npm test`, `npm run lint`, `npm run diff`, `npm run test:e2e`
+  (voir `../AGENTS.md`) ; sur un corpus local, `check.mjs` = **0 erreur**.
 - Les deux moteurs sont **indépendants** : DOCX ne peut pas casser PPTX (et inversement).

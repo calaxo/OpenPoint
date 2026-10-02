@@ -104,8 +104,14 @@ flowchart LR
 5. **SVG** avec un `<defs>` (clips, dégradés, filtres, marqueurs). **Les IDs de defs sont préfixés par
    diapo** (`s<n>_clip0`…) — sinon collision quand plusieurs diapos coexistent dans une page (viewer).
 
-**Animations** : `extractTiming()` lit l'arbre SMIL `<p:timing>` → étapes de clic ; seul
-`build-player.mjs` les rejoue. Détails : [`moteur-animation.md`](moteur-animation.md).
+**Animations** : `extractTiming()` lit l'arbre SMIL `<p:timing>` → étapes de clic (avec leur déclencheur
+`click` / `withPrev` / `afterPrev` et, par effet, preset, zoom, échelle, « venir de ») ; seul le player
+les rejoue. Détails : [`moteur-animation.md`](moteur-animation.md).
+
+**Où est le code** : `pptx-render.mjs` n'est qu'une façade ; le moteur est découpé en petits modules
+dans `renderer/pptx/` (XML, couleurs, thème, parts/rels, polices, géométrie, animations) et
+`renderer/pptx/slide/` (composition, parcours, formes, images, cadres, texte, peinture, effets). Carte
+complète et règles : [`../AGENTS.md`](../AGENTS.md) et l'en-tête de `renderer/pptx-render.mjs`.
 
 ## 5. Le moteur DOCX (`docx-build.mjs`)
 
@@ -188,12 +194,14 @@ node renderer/docx-check.mjs "specimen"            # tous les .docx d'un dossier
 
 ## 9. Règles d'or (pour ne rien casser)
 
-1. **`pptx-render.mjs` est le cœur** : toute modif se vérifie avec `check.mjs` (doit rester **0 erreur**
-   sur `deck A` = 348, `deck B` = 200, et le pack `deck C` = 519).
+1. **Le moteur PPTX (`renderer/pptx/`) est le cœur** : toute modif se vérifie avec `npm test`, `npm run lint`,
+   `npm run diff` (diapos modifiées vs HEAD, planche avant/après) et `npm run test:e2e` (les deux viewers).
+   Sur un corpus local, `check.mjs` doit rester à **0 erreur**.
 2. Les **moteurs sont séparés** : toucher `docx-build.mjs` ne peut pas casser le PPTX (et inversement).
-3. Tag git **`pptx-stable`** = point de retour d'un PPTX connu-bon.
+3. Les decks d'exemple (`test/fixtures/decks.mjs`) couvrent animations, formes, texte, tableaux et
+   graphiques : toute correction y ajoute un cas.
 4. Piège récurrent : tout **ID SVG interne** (`url(#…)`) doit être unique par diapo (préfixe `s<n>_`).
 5. Anti-régression visuelle : hash SVG des diapos avant/après, ou `sweep`/`compare` contre l'oracle.
 6. **Deux filets complémentaires** : `npm test` (node:test) verrouille la **logique pure** (couleurs,
    unités EMU, symboles, parsing de timeline) ; `check.mjs` + hash SVG verrouillent le **rendu**. Une
-   refonte du cœur (`pptx-render.mjs`) doit garder les deux au vert.
+   refonte du cœur doit garder les deux au vert, et `npm run diff` doit afficher « 0 modifiée(s) ».
