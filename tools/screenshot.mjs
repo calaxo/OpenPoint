@@ -1,5 +1,5 @@
 // Capture d'écran d'un fichier HTML (viewers) avec puppeteer.
-// Usage : node tools/screenshot.mjs <fichier.html> <préfixeSortie> [actions...] [--size=1280x720]
+// Usage : node tools/screenshot.mjs <fichier.html[#ancre]> <préfixeSortie> [actions...] [--size=1280x720]
 // Actions (exécutées dans l'ordre) :
 //   wait:500            attendre 500 ms
 //   key:ArrowRight      appuyer sur une touche
@@ -35,7 +35,10 @@ try {
   page.on('pageerror', (e) => { errors++; console.error('[pageerror]', e.message); });
   page.on('console', (m) => { if (m.type() === 'error') { errors++; console.error('[console.error]', m.text()); } });
   page.on('requestfailed', (r) => { errors++; console.error('[requestfailed]', r.url().slice(0, 120)); });
-  await page.goto(pathToFileURL(resolve(file)).href, { waitUntil: 'load' });
+  // « fichier.html#3 » : l'ancre est ajoutée à l'URL file:// (deep-link des viewers)
+  const hashAt = file.indexOf('#');
+  const url = pathToFileURL(resolve(hashAt < 0 ? file : file.slice(0, hashAt))).href + (hashAt < 0 ? '' : file.slice(hashAt));
+  await page.goto(url, { waitUntil: 'load' });
   const list = actions.length ? actions : ['shot:'];
   for (const a of list) {
     const [cmd, ...rest] = a.split(':');

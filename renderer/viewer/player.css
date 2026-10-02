@@ -1,0 +1,43 @@
+/* ═══ Viewer PRÉSENTATION (player-out.html) — voir player.js ═══ */
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; font: 14px/1.4 system-ui, sans-serif; color: #dcdfe4; }
+
+/* scène plein écran ; la diapo est centrée et « letterboxée » à son vrai ratio (--ratio, posé par player.js) */
+#stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+#slide { --ratio: 1.7778; position: relative; overflow: hidden; background: #fff;
+  width: min(100vw, calc(100vh * var(--ratio))); aspect-ratio: var(--ratio); }
+@supports (height: 100dvh) {
+  #slide { width: min(100vw, calc(100dvh * var(--ratio))); }
+}
+#slide .layer { position: absolute; inset: 0; background: #fff; }
+#slide .layer > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+#slide .err { position: absolute; inset: 0; background: #511; color: #fbb; padding: 16px; overflow: auto; }
+#slide .err pre { white-space: pre-wrap; font-size: 11px; }
+
+/* cibles d'animation : état de base (player.js) ; les animations Web passent par-dessus */
+#slide .op-hidden { opacity: 0; }
+#slide g.op-t { transform-box: fill-box; transform-origin: center; }
+
+/* contrôles : masqués par défaut, visibles après un mouvement de souris / un toucher */
+body:not(.show-ui) #stage { cursor: none; }
+#ui { position: fixed; left: 50%; bottom: calc(12px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+  display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 10px; max-width: calc(100vw - 16px);
+  background: rgba(20, 21, 24, .86); box-shadow: 0 2px 12px rgba(0, 0, 0, .4);
+  opacity: 0; pointer-events: none; transition: opacity .25s; }
+body.show-ui #ui { opacity: 1; pointer-events: auto; }
+#ui button { font: inherit; color: #fff; background: rgba(255, 255, 255, .14); border: 0; border-radius: 6px;
+  min-width: 36px; height: 32px; cursor: pointer; }
+#ui button:hover { background: rgba(255, 255, 255, .26); }
+#counter { min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; }
+#step { color: #aab; font-size: 12px; min-width: 56px; text-align: center; }
+#step:empty { display: none; }
+#progress { position: fixed; left: 0; right: 0; bottom: 0; height: 3px; opacity: 0; transition: opacity .25s; pointer-events: none; }
+body.show-ui #progress { opacity: 1; }
+#progress > div { height: 100%; width: 0; background: #4f8cff; transition: width .3s; }
+#jumpbox { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); padding: 6px 14px; border-radius: 6px;
+  background: rgba(0, 0, 0, .75); color: #fff; font-size: 16px; }
+
+@media (prefers-reduced-motion: reduce) {
+  #ui, #progress, #progress > div { transition: none; }
+}

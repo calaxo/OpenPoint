@@ -4,9 +4,9 @@
 // Usage : node renderer/check.mjs "specimen/deck A"
 
 import { renderSlide } from './pptx-render.mjs';
-import { readFileSync, readdirSync, mkdirSync, existsSync, rmSync, writeFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { unzipSync } from 'fflate';
+import { readdirSync, existsSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { openDeck } from './lib/deck.mjs';
 
 const dir = process.argv[2] || 'specimen';
 const files = readdirSync(dir).filter(f => f.toLowerCase().endsWith('.pptx') && !f.startsWith('~$'));
@@ -14,15 +14,10 @@ const WORK = join('renderer', '_work', '_check');
 
 let totErr = 0, totSlides = 0;
 for (const f of files) {
-  let zip; try { zip = unzipSync(new Uint8Array(readFileSync(join(dir, f)))); }
-  catch { console.log(`${f}\n  !! zip invalide`); continue; }
-  if (existsSync(WORK)) rmSync(WORK, { recursive: true, force: true });
-  for (const [p, data] of Object.entries(zip)) {
-    if (p.endsWith('/')) continue;
-    const out = join(WORK, p); mkdirSync(dirname(out), { recursive: true }); writeFileSync(out, Buffer.from(data));
-  }
-  const ppt = join(WORK, 'ppt');
-  const nums = readdirSync(join(ppt, 'slides')).filter(x => /^slide\d+\.xml$/.test(x)).map(x => +x.match(/\d+/)[0]).sort((a,b)=>a-b);
+  // décompression sûre (lib/deck.mjs) ; pas de conversion EMF : les images ne sont pas embarquées ici
+  let deck; try { deck = openDeck(join(dir, f), { workDir: WORK, metafiles: false }); }
+  catch (e) { console.log(`${f}\n  !! zip invalide (${e.message})`); continue; }
+  const ppt = deck.pptDir, nums = deck.slides; // ordre de présentation
   const errs = [], thin = [];
   for (const n of nums) {
     try {

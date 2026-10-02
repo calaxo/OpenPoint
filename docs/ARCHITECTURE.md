@@ -57,11 +57,33 @@ Un **aiguilleur** unique `render.mjs` choisit le bon moteur selon l'extension.
 Le viewer et le player utilisent **le même** moteur PPTX (`pptx-render.mjs`) ; ils ne diffèrent que par
 l'enveloppe HTML (défilement vs plein-écran+animation).
 
+### Anatomie des deux viewers
+
+```mermaid
+flowchart LR
+  X[".pptx"] --> D["lib/deck.mjs<br/>openDeck : unzip sûr · EMF→PNG<br/>ordre · diapos masquées"]
+  D --> R["lib/deck-data.mjs<br/>renderSlide (+ timing)<br/>lib/images.mjs : 1 copie / image"]
+  R --> H["lib/html-page.mjs<br/>inline viewer/*.js|css + JSON"]
+  H --> V["viewer.html<br/>common.js + scroll-viewer.js"]
+  H --> P["player-out.html<br/>common.js + player.js"]
+```
+
+- **Une seule copie par image** : le SVG porte un jeton `op-img:N`, l'image est stockée une fois dans le
+  JSON de la page ; `viewer/common.js` crée une URL `blob:` à la 1re utilisation (marche en `file://`).
+  Deck réel de 66 diapos : ~55 Mo → ~26 Mo (le reste = les images elles-mêmes en base64).
+- **Défilement** : SVG insérés à l'approche de l'écran (IntersectionObserver) ; diapos masquées affichées
+  grisées (badge « masquée ») ; `#3`, j/k, barre « aller à ».
+- **Présentation** : diapos masquées sautées ; l'état de la diapo après *p* clics est **calculé** puis
+  appliqué d'un coup, les effets sont des Web Animations par-dessus — annuler = état final immédiat (clics
+  rapides et retours arrière sûrs). Modèle détaillé en tête de `viewer/player.js`.
+- Le runtime vit dans de **vrais fichiers** `renderer/viewer/*.js|css` (lintés), inlinés au build : la sortie
+  reste un fichier HTML unique. Vérification navigateur : `npm run test:e2e`.
+
 ## 4. Le moteur PPTX (`pptx-render.mjs`)
 
 ```mermaid
 flowchart LR
-  A[".pptx (ZIP)"] --> B["décompression (fflate)<br/>garde anti zip-slip : isEntrySafe"]
+  A[".pptx (ZIP)"] --> B["décompression (lib/deck.mjs)<br/>garde anti zip-slip : isEntrySafe"]
   B --> C["loadContext()<br/>thème master · couleurs · polices"]
   C --> D["composition<br/>masque → layout → diapo"]
   D --> E["walk(spTree)<br/>géométrie · fills · texte · images · effets"]
@@ -119,6 +141,8 @@ PPTX. Points clés :
 | **`pptx-render.mjs`** | **Cœur PPTX** : `renderSlide`, `loadContext`, `extractTiming`. Ne pas casser. | SVG (string) |
 | `build.mjs` | Viewer : rend toutes les diapos d'un `.pptx` en défilement | `viewer.html` |
 | `build-player.mjs` | Présentation animée (rejoue `<p:timing>` au clic) | `player-out.html` |
+| `lib/deck.mjs` · `lib/deck-data.mjs` · `lib/images.mjs` · `lib/html-page.mjs` | Pièces partagées des viewers (ouverture du deck, données, images dé-dupliquées, page) — voir §3 | — |
+| `viewer/*.js` · `viewer/*.css` | Runtime navigateur des viewers, inliné au build | — |
 | **`docx-build.mjs`** | **Cœur DOCX** : `renderDocx` (autonome, ne touche pas le PPTX) | `docx-out.html` |
 | `render.mjs` | Aiguilleur : `.pptx`→build.mjs, `.docx`→docx-build.mjs | — |
 | `office-to-pdf.mjs` | Rendu fidèle via LibreOffice (docx **et** pptx) | `*.pdf` |

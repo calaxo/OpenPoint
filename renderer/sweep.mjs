@@ -2,30 +2,22 @@
 // rapport trié par divergence, en localisant les écarts STRUCTURELS (grille), hors bruit de police.
 // Usage : node renderer/sweep.mjs <deck.pptx> <refsDir> [outReport.json]
 //   refsDir doit contenir slide-<N>.png (export COM PowerPoint, 1280x720).
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
-import { join, dirname, basename } from 'node:path';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { unzipSync } from 'fflate';
 import { PNG } from 'pngjs';
 import pixelmatch from 'pixelmatch';
 import puppeteer from 'puppeteer';
 import { renderSlide } from './pptx-render.mjs';
-import { convertMetafiles } from './metafiles.mjs';
+import { openDeck } from './lib/deck.mjs';
 import { fontsCssFor } from './web-fonts.mjs'; // polices du LMS (woff2 + métriques PowerPoint)
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const [, , pptxPath, refsDir, outPath] = process.argv;
 if (!pptxPath || !refsDir) { console.error('usage: sweep.mjs <deck.pptx> <refsDir> [out.json]'); process.exit(1); }
 
-// unzip -> _work
-const name = basename(pptxPath).replace(/\.pptx$/i, '').replace(/[^\w.-]/g, '_');
-const work = join(ROOT, 'renderer', '_work', name);
-if (!existsSync(join(work, 'ppt', 'presentation.xml'))) {
-  const zip = unzipSync(new Uint8Array(readFileSync(pptxPath)));
-  for (const [p, d] of Object.entries(zip)) { if (p.endsWith('/')) continue; const o = join(work, p); mkdirSync(dirname(o), { recursive: true }); writeFileSync(o, Buffer.from(d)); }
-  convertMetafiles(join(work, 'ppt', 'media'));
-}
-const PPT = join(work, 'ppt');
+// décompression sûre + EMF -> PNG (lib/deck.mjs) ; reuse : un _work/<nom> déjà décompressé est réutilisé
+const { pptDir: PPT, name } = openDeck(pptxPath, { workRoot: join(ROOT, 'renderer', '_work'), reuse: true });
 
 // Polices : celles servies en production (voir web-fonts.mjs), calculées par diapo plus bas.
 // PAS de rétrécissement de texte côté navigateur (comme en production) : PowerPoint ne recalcule pas

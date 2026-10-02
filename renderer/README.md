@@ -16,9 +16,27 @@
 | Fichier | Produit | Mode |
 |---|---|---|
 | `render.mjs` | — | **Aiguilleur** : `.pptx`→build.mjs, `.docx`→docx-build.mjs |
-| `build.mjs` | `viewer.html` | PPTX en **défilement** (toutes les diapos, état final) |
-| `build-player.mjs` | `player-out.html` | PPTX en **présentation animée** (clic = étape suivante) |
+| `build.mjs` | `viewer.html` | PPTX en **défilement** (toutes les diapos, état final, masquées grisées) |
+| `build-player.mjs` | `player-out.html` | PPTX en **présentation animée** (clic = étape suivante, diapos masquées sautées) |
 | `office-to-pdf.mjs` | `*.pdf` | Rendu **fidèle** via LibreOffice (docx **et** pptx) |
+
+## Les viewers (enveloppe HTML autour du moteur)
+
+`build.mjs` et `build-player.mjs` ne font qu'assembler des pièces partagées ; le résultat reste **un seul
+fichier HTML autonome** (ouvrable en `file://`, sans serveur).
+
+| Fichier | Rôle |
+|---|---|
+| `lib/deck.mjs` | `openDeck(pptx)` : décompression **sûre** (anti zip-slip), EMF/WMF → PNG (Windows), ordre de présentation (`slides`), diapos masquées (`hidden`). Utilisé aussi par `check` / `qa` / `sweep`. |
+| `lib/deck-data.mjs` | `renderDeckData(deck)` : rend chaque diapo (+ timing / transition pour le player) → objet JSON de la page. |
+| `lib/images.mjs` | Dé-duplication : chaque `data:` URI est stockée **une fois** ; le SVG porte un jeton `op-img:N`. |
+| `lib/html-page.mjs` | `buildPage()` : inline les fichiers de `viewer/` + les données (`<script type="application/json" id="op-data">`). |
+| `viewer/common.js` | Runtime commun (global `OP`) : lecture des données, jetons → URL `blob:`, `#ancre`. |
+| `viewer/scroll-viewer.js` + `viewer.css` | Viewer **défilement** : insertion paresseuse des SVG, barre d'outils, j/k, `#3`, diapos masquées grisées. |
+| `viewer/player.js` + `player.css` | **Présentation** : étapes de clic, effets (Web Animations), transitions, clavier/tactile, `#3`. Le modèle est expliqué en tête du fichier. |
+
+Les fichiers de `viewer/` sont des **scripts navigateur classiques** (pas de module, pas de bundler), lintés
+par `npm run lint`. Test de bout en bout dans Chrome : `npm run test:e2e` (`tools/e2e-viewers.mjs`).
 
 ## Qualité / oracle
 

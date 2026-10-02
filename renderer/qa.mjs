@@ -11,9 +11,9 @@
 //   node renderer/qa.mjs --list 40       -> affiche jusqu'à 40 diapos modifiées (défaut 25)
 //   node renderer/qa.mjs "dossier"       -> corpus personnalisé (dossier de .pptx), répétable
 import { renderSlide } from './pptx-render.mjs';
-import { readFileSync, readdirSync, mkdirSync, existsSync, rmSync, writeFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { unzipSync } from 'fflate';
+import { readFileSync, readdirSync, existsSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { openDeck } from './lib/deck.mjs';
 import { createHash } from 'node:crypto';
 
 const md5 = (s) => createHash('md5').update(s).digest('hex');
@@ -36,15 +36,10 @@ for (const dir of CORPORA) {
   if (!existsSync(dir)) { console.log(`(absent) ${dir}`); continue; }
   const files = readdirSync(dir).filter((f) => f.toLowerCase().endsWith('.pptx') && !f.startsWith('~$'));
   for (const f of files) {
-    let zip; try { zip = unzipSync(new Uint8Array(readFileSync(join(dir, f)))); }
-    catch { console.log(`  !! zip invalide : ${f}`); continue; }
-    if (existsSync(WORK)) rmSync(WORK, { recursive: true, force: true });
-    for (const [p, data] of Object.entries(zip)) {
-      if (p.endsWith('/')) continue;
-      const out = join(WORK, p); mkdirSync(dirname(out), { recursive: true }); writeFileSync(out, Buffer.from(data));
-    }
-    const ppt = join(WORK, 'ppt');
-    if (!existsSync(join(ppt, 'slides'))) continue;
+    // décompression sûre (lib/deck.mjs), sans conversion EMF (hash stables, images non embarquées)
+    let ppt; try { ppt = openDeck(join(dir, f), { workDir: WORK, metafiles: false }).pptDir; }
+    catch (e) { console.log(`  !! deck illisible : ${f} (${e.message})`); continue; }
+    // clés de hash par NUMÉRO DE FICHIER (tous les slideN.xml, tri numérique) : baseline inchangée
     const nums = readdirSync(join(ppt, 'slides')).filter((x) => /^slide\d+\.xml$/.test(x)).map((x) => +x.match(/\d+/)[0]).sort((a, b) => a - b);
     for (const n of nums) {
       totSlides++;

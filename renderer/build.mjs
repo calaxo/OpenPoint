@@ -1,73 +1,65 @@
 // ═══ [SORTIE · viewer DÉFILEMENT] ═══ docs/ARCHITECTURE.md (§3) · utilise pptx-render.mjs · état FINAL (pas d'animation)
-// Rend un PPTX (ou le deck de démo) en un viewer HTML autonome, SANS PowerPoint.
+// Rend un PPTX en un viewer HTML autonome (un seul fichier), SANS PowerPoint.
 //
 // Usage :
-//   node renderer/build.mjs                       -> deck de démo (specimen/extracted/ppt)
-//   node renderer/build.mjs "C:\chemin\deck.pptx" -> n'importe quel .pptx (décompressé auto)
-//   node renderer/build.mjs "C:\chemin\deck.pptx" 1 5 8   -> seulement ces diapos
+//   node renderer/build.mjs "C:\chemin\deck.pptx"          -> renderer/viewer.html
+//   node renderer/build.mjs "C:\chemin\deck.pptx" 1 5 8    -> seulement ces diapos (numéros de fichier slideN.xml)
+//   node renderer/build.mjs "deck.pptx" --out=autre.html   -> autre fichier de sortie
+//   node renderer/build.mjs                                -> deck de démo (specimen/extracted/ppt), si présent
 //
-// Sortie : renderer/viewer.html (+ dossier de travail renderer/_work/<nom>/)
-
-import { renderSlide } from './pptx-render.mjs';
-import { fontsCssFor } from './web-fonts.mjs'; // polices du LMS (woff2 + métriques PowerPoint)
-import { writeFileSync, readFileSync, readdirSync, mkdirSync, existsSync, rmSync } from 'node:fs';
-import { join, dirname, basename } from 'node:path';
+// Pièces : lib/deck.mjs (décompression), lib/deck-data.mjs (rendu + images dé-dupliquées),
+// lib/html-page.mjs (page), viewer/common.js + viewer/scroll-viewer.js + viewer/viewer.css (runtime).
+import { writeFileSync, existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { unzipSync } from 'fflate';
+import { slideOrder } from './pptx-render.mjs';
+import { fontsCssFor } from './web-fonts.mjs'; // polices du LMS (woff2 + métriques PowerPoint)
+import { openDeck, hiddenSlides } from './lib/deck.mjs';
+import { renderDeckData } from './lib/deck-data.mjs';
+import { buildPage } from './lib/html-page.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
-const pptxArg = args.find(a => a.toLowerCase().endsWith('.pptx'));
-const only = args.filter(a => /^\d+$/.test(a)).map(Number);
+const pptxArg = args.find((a) => a.toLowerCase().endsWith('.pptx'));
+const only = args.filter((a) => /^\d+$/.test(a)).map(Number);
+const outArg = args.find((a) => a.startsWith('--out='));
+const OUT = outArg ? outArg.slice(6) : join(ROOT, 'renderer', 'viewer.html');
 
-// --- résout le dossier ppt/ (décompresse le .pptx si fourni) ---
-let PPT;
-if (pptxArg) {
-  const name = basename(pptxArg).replace(/\.pptx$/i, '').replace(/[^\w.-]/g, '_');
-  const workDir = join(ROOT, 'renderer', '_work', name);
-  if (existsSync(workDir)) rmSync(workDir, { recursive: true, force: true });
-  const zip = unzipSync(new Uint8Array(readFileSync(pptxArg)));
-  for (const [path, data] of Object.entries(zip)) {
-    if (path.endsWith('/')) continue;
-    const out = join(workDir, path);
-    mkdirSync(dirname(out), { recursive: true });
-    writeFileSync(out, Buffer.from(data));
+let deck;
+try {
+  if (pptxArg) {
+    deck = openDeck(pptxArg, { workRoot: join(ROOT, 'renderer', '_work') });
+    console.log(`Décompressé : ${pptxArg}\n           -> ${deck.workDir}`);
+  } else {
+    // deck de démo déjà décompressé (dossier local, non versionné)
+    const pptDir = join(ROOT, 'specimen', 'extracted', 'ppt');
+    if (!existsSync(join(pptDir, 'slides'))) throw new Error('aucun .pptx donné et pas de deck de démo (specimen/extracted/ppt)');
+    const slides = slideOrder(pptDir);
+    deck = { pptDir, name: 'specimen', slides, hidden: hiddenSlides(pptDir, slides) };
   }
-  PPT = join(workDir, 'ppt');
-  console.log(`Décompressé : ${pptxArg}\n           -> ${workDir}`);
-} else {
-  PPT = join(ROOT, 'specimen', 'extracted', 'ppt');
-}
-
-if (!existsSync(join(PPT, 'slides'))) {
-  console.error(`Introuvable : ${join(PPT, 'slides')} — le .pptx est-il valide ?`);
+} catch (e) {
+  console.error(`Impossible d'ouvrir le deck : ${e.message}`);
   process.exit(1);
 }
 
-const nums = readdirSync(join(PPT, 'slides'))
-  .filter(f => /^slide\d+\.xml$/.test(f)).map(f => +f.match(/\d+/)[0]).sort((a, b) => a - b)
-  .filter(n => !only.length || only.includes(n));
-
-let cards = '';
-for (const n of nums) {
-  try {
-    const { svg } = renderSlide(PPT, n, { embedImages: true });
-    cards += `<div class="card"><div class="lbl">diapo ${n}</div>${svg}</div>`;
-  } catch (e) {
-    cards += `<div class="card err"><div class="lbl">diapo ${n} — ERREUR</div><pre>${e.stack}</pre></div>`;
-    console.error(`slide ${n}:`, e.message);
-  }
-}
+const { data, fontsSource } = renderDeckData(deck, { only });
 
 // Polices : exactement celles servies en production, limitées aux familles que les diapos citent (voir web-fonts.mjs).
-const fonts = fontsCssFor(cards);
 // PAS de rétrécissement de texte côté navigateur (comme en production) : PowerPoint ne recalcule pas
 // l'autofit à l'affichage, il applique le fontScale ENREGISTRÉ dans le fichier — que le moteur a déjà
 // reporté dans le SVG. Rétrécir ici ferait diverger le rendu de l'original PowerPoint.
-const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>PPTX renderer</title>
-<style>${fonts}
-body{margin:0;background:#333;font:13px system-ui}.card{margin:16px auto;width:min(90vw,1000px);background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.4)}.lbl{background:#222;color:#ddd;padding:4px 10px}.err{background:#511}pre{color:#fbb;white-space:pre-wrap;padding:8px;font-size:11px}</style>
-</head><body>${cards}
-</body></html>`;
-writeFileSync(join(ROOT, 'renderer', 'viewer.html'), html);
-console.log(`OK -> renderer/viewer.html (${nums.length} diapos)`);
+const html = buildPage({
+  title: deck.name,
+  headCss: fontsCssFor(fontsSource),
+  css: ['viewer.css'],
+  scripts: ['common.js', 'scroll-viewer.js'],
+  body: `<header id="bar"><span id="deck-name"></span><span id="count"></span>
+<span class="nav"><button id="prev" title="Diapo précédente (k)" aria-label="Diapo précédente">‹</button>
+<input id="jump" type="number" min="1" inputmode="numeric" aria-label="Aller à la diapo" title="Aller à la diapo (n° + Entrée)">
+<button id="next" title="Diapo suivante (j)" aria-label="Diapo suivante">›</button></span></header>
+<main id="deck"></main>`,
+  data,
+});
+writeFileSync(OUT, html);
+const mb = (Buffer.byteLength(html) / 1e6).toFixed(1);
+console.log(`OK -> ${OUT} (${data.slides.length} diapos, ${data.images.length} images distinctes, ${mb} Mo)`);

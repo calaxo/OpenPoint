@@ -1,0 +1,40 @@
+/* ═══ Viewer DÉFILEMENT (viewer.html) — voir scroll-viewer.js ═══ */
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: #2b2d31; color: #dcdfe4; font: 13px/1.4 system-ui, sans-serif; }
+
+/* barre d'outils compacte, collée en haut */
+#bar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px;
+  padding: 6px 12px; background: rgba(24, 25, 28, .94); border-bottom: 1px solid #3a3c42;
+  backdrop-filter: blur(6px); }
+#deck-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1 1 auto; }
+#count { color: #9aa0aa; white-space: nowrap; }
+#bar .nav { display: flex; align-items: center; gap: 4px; flex: none; }
+#bar button, #bar input { font: inherit; color: inherit; background: #3a3c42; border: 1px solid #4a4d55;
+  border-radius: 4px; height: 28px; }
+#bar button { width: 30px; cursor: pointer; }
+#bar button:hover { background: #4a4d55; }
+#bar input { width: 56px; padding: 0 6px; text-align: center; }
+
+/* cartes de diapos */
+#deck { padding: 8px 0 40vh; }
+.card { width: min(100% - 32px, 1100px); margin: 16px auto; }
+.lbl { display: flex; align-items: baseline; gap: 8px; padding: 2px 2px 4px; color: #9aa0aa; }
+.lbl .num { color: #fff; font-weight: 600; font-size: 14px; }
+.lbl .file { font-size: 11px; }
+.badge { font-size: 11px; padding: 0 6px; border-radius: 8px; background: #555a63; color: #fff; }
+.badge.err { background: #a33; }
+.frame { position: relative; background: #fff; box-shadow: 0 4px 16px rgba(0, 0, 0, .45); overflow: hidden; }
+.frame svg { display: block; width: 100%; height: auto; }
+.card.is-current .lbl .num { color: #7cb7ff; }
+.card.is-hidden .frame { opacity: .45; filter: grayscale(.6); }
+.card.is-error .frame { background: #511; }
+.card.is-error pre { margin: 0; padding: 8px; color: #fbb; white-space: pre-wrap; font-size: 11px; }
+
+/* téléphone : diapos pleine largeur (petite marge), barre plus serrée */
+@media (max-width: 600px) {
+  #bar { gap: 6px; padding: 6px 8px; }
+  #count { font-size: 11px; }
+  .card { width: calc(100% - 16px); margin: 10px auto; }
+  .lbl .file { display: none; }
+}
