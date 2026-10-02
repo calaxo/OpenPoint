@@ -17,10 +17,10 @@
 // renderSlide n'est pas réentrant (état de module dans fonts.mjs, ctx muté) : un appel à la fois.
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { P, PF, cachedParse, tagOf, first, serialize } from '../xml.mjs';
+import { P, PF, cachedParse, tagOf, at, first, serialize } from '../xml.mjs';
 import { u } from '../units.mjs';
 import { loadContext } from '../theme.mjs';
-import { slideRels, relsOf, imageHref, placeholderGeom } from '../parts.mjs';
+import { slideRels, relsOf, imageHref, placeholderGeom, slideOrder } from '../parts.mjs';
 import { setMinorFont } from '../fonts.mjs';
 import { loadMasterStyles, loadDefaultTextStyle } from '../text-styles.mjs';
 import { walk, IDENT } from './walk.mjs';
@@ -57,12 +57,15 @@ export function renderSlide(pptDir, slideNo, opts = {}) {
   const spTree = first(cSld, 'p:spTree');
   const { W, H } = slideSize(pptDir);
 
-  // clrMap + txStyles du master, puis defaultTextStyle de la présentation (bas de la cascade de texte)
-  loadMasterStyles(ctx, masterPath);
+  // clrMap + txStyles du master, puis defaultTextStyle de la présentation (bas de la cascade de texte).
+  // Le clrMap peut être SURCHARGÉ par la diapo, sinon par le layout (p:clrMapOvr/a:overrideClrMapping,
+  // ex. layout « sombre » d'un thème clair) : la surcharge s'applique avant de résoudre les couleurs.
+  const layoutO = layoutPath && existsSync(layoutPath) ? cachedParse(layoutPath, 'ord').find((n) => tagOf(n) === 'p:sldLayout') : null;
+  loadMasterStyles(ctx, masterPath, clrMapOverride(sld) ?? clrMapOverride(layoutO));
   loadDefaultTextStyle(ctx, pptDir);
 
   const rc = {
-    pptDir, slideNo, embed, uid, W, H, ctx, phGeom, mphGeom,
+    pptDir, slideNo, slideNum: slideNumber(pptDir, slideNo), embed, uid, W, H, ctx, phGeom, mphGeom,
     body: [], curRels: rels, skipPh: false, spidPfx: '',
     grads: [], patterns: [], clips: [], filters: [], lineMarkers: new Map(),
   };
@@ -106,6 +109,28 @@ export function slideSize(pptDir) {
     if (sz) { W = +sz['@cx'] || W; H = +sz['@cy'] || H; }
   } catch {}
   return { W, H };
+}
+
+// slideNumber(pptDir, n) -> numéro AFFICHÉ par le champ « n° de diapo » : position de la diapo dans
+// l'ordre de présentation (diapos masquées comprises) + p:presentation@firstSlideNum - 1.
+// Repli : le numéro de fichier.
+function slideNumber(pptDir, slideNo) {
+  const pos = slideOrder(pptDir).indexOf(slideNo);
+  if (pos < 0) return slideNo;
+  let first = 1;
+  try { first = +cachedParse(join(pptDir, 'presentation.xml'), 'flat')['p:presentation']?.['@firstSlideNum'] || 1; } catch {}
+  return pos + first;
+}
+
+// clrMapOverride(racine p:sld | p:sldLayout ORDONNÉE) -> { bg1:'dk1', … } si la part porte
+// <p:clrMapOvr><a:overrideClrMapping …/>, sinon null (a:masterClrMapping = garder celui du master).
+function clrMapOverride(root) {
+  const ovr = root && first(root, 'p:clrMapOvr');
+  const m = ovr && first(ovr, 'a:overrideClrMapping');
+  if (!m) return null;
+  const out = {};
+  for (const [k, v] of Object.entries(at(m))) out[k.slice(1)] = v;
+  return out;
 }
 
 // partOf(chemin, balise racine) -> { spTree, cSld } d'un master / layout (arbre ORDONNÉ, en cache,

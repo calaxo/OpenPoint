@@ -40,7 +40,7 @@ const arr = (x) => x === undefined ? [] : Array.isArray(x) ? x : [x];
 // traitement particulier ; a:noAutofit -> débordement libre.
 export function renderText(rc, txBody, w, h, phKind, inhLst, txBodyO, inhBodyPr, shapeStyle, textRect, mstLst) {
   if (!txBody) return '';
-  const { ctx, curRels, pptDir, embed, slideNo } = rc;
+  const { ctx, curRels, pptDir, embed, slideNum } = rc;
   const bodyPr = txBody['a:bodyPr'] || {};
   // texte VERTICAL (§21.1.2.1.1 @vert) : vert = tourné de 90° (lecture de haut en bas), vert270 = -90°
   // (de bas en haut). On compose dans un cadre aux dimensions permutées puis on le fait pivoter autour
@@ -316,7 +316,7 @@ export function renderText(rc, txBody, w, h, phKind, inhLst, txBodyO, inhBodyPr,
       }
       // champ slidenum : afficher le VRAI numéro de diapo (sinon le texte-invite « ‹N°› »
       // du layout/master fuit — c'est une zone libre non-placeholder, donc non sautée).
-      let raw = r['@type'] === 'slidenum' ? String(slideNo) : (r['a:t'] ?? '');
+      let raw = r['@type'] === 'slidenum' ? String(slideNum) : (r['a:t'] ?? '');
       // espaces de FIN de paragraphe (dernier run) : non rendus par PowerPoint → couper (sinon
       // ils élargissent la boîte et déclenchent une sur-réduction de l'autofit). Espaces INTERNES
       // multiples conservés (pre-wrap) pour le positionnement type « TURBULENCE   vu à ».

@@ -33,8 +33,10 @@ function bulletOf(pPr) {
   return null;
 }
 
-// loadMasterStyles(ctx, masterPath) : pose ctx.clrMap et ctx.txStyles depuis le master de la diapo.
-export function loadMasterStyles(ctx, masterPath) {
+// loadMasterStyles(ctx, masterPath, override?) : pose ctx.clrMap et ctx.txStyles depuis le master de la
+// diapo. override = clrMap de surcharge (p:clrMapOvr de la diapo ou du layout) qui REMPLACE celui du
+// master, appliqué AVANT la résolution des couleurs des txStyles.
+export function loadMasterStyles(ctx, masterPath, override) {
   // clrMap du masque : remappe bg1/tx1/bg2/tx2 vers dk1/lt1/... (crucial pour thème sombre)
   // + txStyles : couleurs/tailles par défaut des placeholders (titre/corps) hérités par les runs
   // Structure produite : ctx.txStyles[title|body|other][niveau 1..9] = { sz (pt), b, color (CSS déjà
@@ -44,9 +46,10 @@ export function loadMasterStyles(ctx, masterPath) {
   if (masterPath && existsSync(masterPath)) {
     const mflat = cachedParse(masterPath, 'flat');
     const cm = mflat['p:sldMaster']?.['p:clrMap'];
-    // p:clrMap bg1="lt1" tx1="dk1" … -> { bg1:'lt1', tx1:'dk1', … }. NB : un p:clrMapOvr du layout
-    // ou de la diapo (surcharge locale) n'est pas lu : c'est toujours la table du master qui s'applique.
+    // p:clrMap bg1="lt1" tx1="dk1" … -> { bg1:'lt1', tx1:'dk1', … }, puis surcharge éventuelle
+    // (p:clrMapOvr de la diapo ou du layout, fournie par renderSlide).
     if (cm) { ctx.clrMap = {}; for (const [k, v] of Object.entries(cm)) if (k.startsWith('@')) ctx.clrMap[k.slice(1)] = v; }
+    if (override) ctx.clrMap = { ...(ctx.clrMap || {}), ...override };
     const ts = mflat['p:sldMaster']?.['p:txStyles'];
     if (ts) for (const [k, tag] of Object.entries({ title:'p:titleStyle', body:'p:bodyStyle', other:'p:otherStyle' })) {
       const st = ts[tag]; if (!st) continue; ctx.txStyles[k] = {};

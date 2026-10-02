@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { unzipSync } from 'fflate';
 import { buildDecks, writeDeck, zipDeck } from './fixtures/decks.mjs';
-import { renderSlide, extractTiming, extractTransition } from '../renderer/pptx-render.mjs';
+import { renderSlide, extractTiming, extractTransition, slideOrder } from '../renderer/pptx-render.mjs';
 
 const decks = buildDecks();
 const root = mkdtempSync(join(tmpdir(), 'openpoint-fx-'));
@@ -141,7 +141,7 @@ test('text d.2 : runs, autofit, texte vertical, tabulations', () => {
   assert.match(b, /italic/); assert.match(b, /underline/);
   assert.match(b, /vertical|writing-mode/);
   assert.match(b, /data-af="norm"/);
-  assert.ok(plain(b).includes('Diapo 2')); // champ slidenum (= n° de fichier)
+  assert.ok(plain(b).includes('Diapo 1')); // champ slidenum = position dans la présentation (slide2 est 1re)
 });
 test('text d.3 : diapo sombre, fond foncé', () => {
   const { svg } = r('text', 3);
@@ -152,9 +152,16 @@ test('text : la présentation liste slide2 avant slide1 (fichiers inchangés)', 
   const p = decks.text['ppt/presentation.xml'];
   assert.ok(p.indexOf('rId12') < p.indexOf('rId11'));
 });
-test.todo('ordre de présentation : le moteur/viewers numérotent par fichier slideN.xml, pas par p:sldIdLst (deck text : slide2 vient avant slide1) ; le champ slidenum affiche aussi le n° de fichier');
-
-test.todo('clrMapOvr/overrideClrMapping du layout ignoré (bg1->dk1, tx1->lt1) : deck text d.3, layout Sombre -> fond blanc et texte sombre');
+test('text : slideOrder suit p:sldIdLst (slide2, slide1, slide3, slide4)', () => {
+  assert.deepEqual(slideOrder(ppt('text')), [2, 1, 3, 4]);
+  assert.deepEqual(slideOrder(ppt('shapes')), [1, 2, 3]);
+});
+test('text d.4 : clrMapOvr du layout (bg1->dk1, tx1->lt1) appliqué au fond et au texte', () => {
+  const { svg } = r('text', 4);
+  assert.ok(plain(svg).includes('Couleurs héritées du layout sombre'));
+  assert.match(svg, /<rect width="720" height="405" fill="rgb\(31,31,31\)"\/>/); // fond bg1 = dk1
+  assert.match(svg, /color:rgb\(238,241,246\)/); // titre en tx2 (titleStyle du master) -> lt2 clair
+});
 
 // ───── tables-charts ─────
 test('tables-charts d.1 : tableau (style, bandes, fusion)', () => {

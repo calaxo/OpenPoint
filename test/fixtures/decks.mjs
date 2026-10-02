@@ -365,8 +365,12 @@ function textDeck() {
     sp({ id: 3, name: 'Contenu 2', ph: 'idx="1"', paras: [para('Texte clair sur fond sombre', { r: { color: 'E0E0E0' } })] }),
     sp({ id: 4, name: 'Carte', x: 36, y: 280, w: 300, h: 60, fill: solid('accent1'), paras: [para('Accent 1', { algn: 'ctr', r: { sz: 20, color: 'FFFFFF' } })] }),
   ] }));
-  // ordre de présentation : slide2, slide1, slide3
-  return assemble(slides, { order: [2, 1, 3] });
+  // slide4 : layout « Sombre » SANS couleur explicite : fond et texte viennent du clrMapOvr du layout
+  slides.push(slide({ layout: 2, shapes: [
+    sp({ id: 2, name: 'Titre 1', ph: 'type="title"', paras: [para('Couleurs héritées du layout sombre')] }),
+  ] }));
+  // ordre de présentation : slide2, slide1, slide3, slide4
+  return assemble(slides, { order: [2, 1, 3, 4] });
 }
 
 // ───────────────────────── deck « tables-charts » ─────────────────────────
