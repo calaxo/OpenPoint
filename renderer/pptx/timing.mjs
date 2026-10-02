@@ -18,12 +18,17 @@ import { P, tagOf, at, kids, byTag, first, deepFind } from './xml.mjs';
 // ================= extraction de la timeline d'animation (<p:timing>) =================
 // Renvoie les "étapes de clic" : [{ effects:[{spid, cls, filter, transition, delay, dur}] }]
 // cls = entr|exit|emph ; filter (fade/wipe(..)/circle(out)..) ; delay/dur en ms.
-// Forme exacte d'un effet : { cls, spid, par: {from,to}|null, filter, transition, motion, delay, dur }
+// Forme exacte d'une étape : { trigger, effects } ; trigger = 'click' (attend un clic), 'withPrev' ou
+//   'afterPrev' (démarre seule : 1re étape d'une diapo dont le 1er effet est « avec / après le précédent »,
+//   d'après @nodeType withEffect / afterEffect du 1er effet).
+// Forme exacte d'un effet : { cls, spid, par: {from,to}|null, filter, transition, motion, delay, dur, node }
+//   node  : @nodeType (clickEffect, withEffect, afterEffect) ou null ;
 //   cls   : @presetClass (entr, exit, emph, path, verb, mediacall) ;
 //   motion: { kind:'move', dx, dy, dur, rev } | { kind:'rot', deg, dur, rev } | null.
 // animatedSpids : spids des formes ENTIÈRES qui ont une entrée -> à cacher avant leur 1re apparition.
 // Seule la 1re p:seq trouvée est lue (en pratique la mainSeq) : les séquences interactives (déclencheur
 // au clic sur une forme) sont ignorées.
+const TRIGGER = { withEffect: 'withPrev', afterEffect: 'afterPrev' };
 export function extractTiming(pptDir, slideNo) {
   const text = readFileSync(join(pptDir, 'slides', `slide${slideNo}.xml`), 'utf8');
   // extraction par regex (évite de reparser toute la diapo). Suppose une balise <p:timing> SANS
@@ -35,9 +40,8 @@ export function extractTiming(pptDir, slideNo) {
   const seq = deepFind(timing, 'p:seq');
   if (!seq) return { steps: [], animatedSpids: [] };
   const seqCTn = first(seq, 'p:cTn');
-  // chaque p:par enfant direct de la séquence = une étape. @nodeType n'est pas consulté : une étape
-  // qui démarre toute seule (« après la précédente » en tête de séquence) est quand même traitée
-  // comme un clic.
+  // chaque p:par enfant direct de la séquence = une étape. Une étape qui démarre toute seule (1er effet
+  // « avec / après le précédent », en tête de séquence) est signalée par step.trigger (voir TRIGGER).
   const clickPars = byTag(first(seqCTn, 'p:childTnLst'), 'p:par');
 
   const animatedSpids = new Set();
@@ -47,7 +51,7 @@ export function extractTiming(pptDir, slideNo) {
     // entrée ciblant la forme entière (sans plage de paragraphes) -> cachée au départ.
     // Les entrées par paragraphe (bldP) sont gérées séparément par le player (data-par).
     for (const e of effects) if (e.cls === 'entr' && !e.par) animatedSpids.add(e.spid);
-    return { effects };
+    return { trigger: TRIGGER[effects[0]?.node] || 'click', effects };
   }).filter((s) => s.effects.length); // étapes sans effet reconnu retirées
   return { steps, animatedSpids: [...animatedSpids] };
 
@@ -85,7 +89,7 @@ export function extractTiming(pptDir, slideNo) {
     const durNode = [...allCTn(cTn)].map((c) => at(c)['@dur']).find((d) => d && d !== 'indefinite' && +d > 1);
     if (durNode) dur = +durNode;
     return {
-      cls: a['@presetClass'], spid: spTgt ? at(spTgt)['@spid'] : null,
+      cls: a['@presetClass'], node: a['@nodeType'] ?? null, spid: spTgt ? at(spTgt)['@spid'] : null,
       par: pRg ? { from: +at(pRg)['@st'] || 0, to: +at(pRg)['@end'] || 0 } : null,
       filter: animEff ? at(animEff)['@filter'] : null,
       transition: animEff ? at(animEff)['@transition'] : null,

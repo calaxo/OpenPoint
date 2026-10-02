@@ -74,7 +74,17 @@ test('animations d.4 : avec / après le précédent (délais cumulés)', () => {
   assert.deepEqual(e.map((x) => x.dur), [500, 500, 400, 500]);
   assert.equal(e[3].filter, 'wipe(down)');
 });
-test.todo('extractTiming n\'expose pas @nodeType (clickEffect / withEffect / afterEffect) : animations d.4');
+test('animations d.4 : @nodeType exposé (node) ; étape déclenchée au clic', () => {
+  const t = extractTiming(ppt('animations'), 4);
+  assert.deepEqual(t.steps[0].effects.map((x) => x.node), ['clickEffect', 'withEffect', 'afterEffect', 'withEffect']);
+  assert.equal(t.steps[0].trigger, 'click');
+});
+
+test('animations d.9 : 1re étape automatique (afterPrev), puis un clic', () => {
+  const t = extractTiming(ppt('animations'), 9);
+  assert.deepEqual(t.steps.map((s) => s.trigger), ['afterPrev', 'click']);
+  assert.deepEqual(t.animatedSpids, ['3', '4']);
+});
 
 test('animations d.5 : trajectoire (animMotion) et rotation (animRot)', () => {
   const t = extractTiming(ppt('animations'), 5);

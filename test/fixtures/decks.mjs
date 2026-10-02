@@ -143,9 +143,11 @@ const fx = (spid, kind, { par, delay = 0, dur = 500, node = 'clickEffect' } = {}
 };
 // timing(clicks, bldP) : clicks = [ [ [effets du groupe 1 (avec)], [groupe 2 (après)], ... ], ... ]
 // Chaque groupe = un p:par intermédiaire dont le délai = fin du groupe précédent (comme PowerPoint).
-const timing = (clicks, bldList = '') => {
+// opts.autoFirst : la 1re étape démarre seule (1er effet « après le précédent ») ; PowerPoint ajoute alors
+// une condition onBegin sur le conteneur de l'étape.
+const timing = (clicks, bldList = '', opts = {}) => {
   _ctn = 2; // 1 = tmRoot, 2 = mainSeq
-  const clickXml = clicks.map((groups) => {
+  const clickXml = clicks.map((groups, ci) => {
     const outer = ctnId();
     let t = 0;
     const inner = groups.map((effs) => {
@@ -154,7 +156,7 @@ const timing = (clicks, bldList = '') => {
       t += Math.max(...effs.map((e) => e.end));
       return x;
     }).join('');
-    return `<p:par><p:cTn id="${outer}" fill="hold"><p:stCondLst><p:cond delay="indefinite"/></p:stCondLst><p:childTnLst>${inner}</p:childTnLst></p:cTn></p:par>`;
+    return `<p:par><p:cTn id="${outer}" fill="hold"><p:stCondLst><p:cond delay="indefinite"/>${opts.autoFirst && ci === 0 ? '<p:cond evt="onBegin" delay="0"><p:tn val="2"/></p:cond>' : ''}</p:stCondLst><p:childTnLst>${inner}</p:childTnLst></p:cTn></p:par>`;
   }).join('');
   return `<p:timing><p:tnLst><p:par><p:cTn id="1" dur="indefinite" restart="never" nodeType="tmRoot"><p:childTnLst>`
     + `<p:seq concurrent="1" nextAc="seek"><p:cTn id="2" dur="indefinite" nodeType="mainSeq"><p:childTnLst>${clickXml}</p:childTnLst></p:cTn>`
@@ -287,6 +289,9 @@ function animationsDeck() {
   slides.push(slide({ shapes: [label(2, 'Transition : fondu'), box(3, 'Fondu', 280, '2E75B6', 140)], transition: trFade(700) }));
   slides.push(slide({ shapes: [label(2, 'Transition : poussée vers le haut'), box(3, 'Push', 280, 'ED7D31', 140)], transition: trPush('u') }));
   slides.push(slide({ shapes: [label(2, 'Transition : morphing'), box(3, 'Morph', 100, '70AD47', 200)], transition: trMorph() }));
+  // 9 : 1re étape automatique (« après le précédent » en tête de diapo), puis un clic
+  slides.push(slide({ shapes: [label(2, 'Démarrage automatique puis clic'), box(3, 'Auto', 100, '2E75B6'), box(4, 'Clic', 420, 'ED7D31')],
+    timing: timing([[[fx(3, 'fade', { node: 'afterEffect' })]], [[fx(4, 'fade')]]], '', { autoFirst: true }) }));
   return assemble(slides);
 }
 
