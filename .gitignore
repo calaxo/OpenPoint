@@ -7,6 +7,9 @@ renderer/ref/*.pdf
 renderer/_work/
 renderer/player-out.html
 
+# polices variables Google téléchargées par fonts/build-google-fonts.py (cache local)
+renderer/fonts/_vf_cache/
+
 # docs OOXML deposes localement (droits ISO/ECMA) — sauf le README
 docs/ooxml/specs/*
 !docs/ooxml/specs/README.md

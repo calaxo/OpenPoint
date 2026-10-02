@@ -123,6 +123,17 @@ const FACES = [
   ["TeX Gyre Pagella", 700, "normal", "texgyrepagella-bold.woff2"],
   ["TeX Gyre Pagella", 400, "italic", "texgyrepagella-italic.woff2"],
   ["TeX Gyre Pagella", 700, "italic", "texgyrepagella-bolditalic.woff2"],
+  // Cairo / Space Grotesk : polices de très nombreux modèles Slidesgo (Google Fonts, OFL). Le deck les
+  // référence par leur NOM EXACT (aucune ne remplace une police propriétaire) : sans face de ce nom, le
+  // navigateur retombait sur son sans-serif générique -> glyphes différents ET chasses plus larges, donc
+  // retours à la ligne erronés. On embarque donc la famille sous le nom qu'écrit le moteur.
+  // « Space Grotesk Medium » est une FAMILLE distincte du fichier (instance wght=500) : le deck l'écrit
+  // telle quelle, et la graisse 400 demandée retombe dessus (seule face de la famille).
+  // Instances statiques générées depuis les variables Google (voir fonts/build-google-fonts.py).
+  ["Cairo", 400, "normal", "Cairo-Regular.woff2"],
+  ["Cairo", 700, "normal", "Cairo-Bold.woff2"],
+  ["Space Grotesk", 400, "normal", "SpaceGrotesk-Regular.woff2"],
+  ["Space Grotesk Medium", 500, "normal", "SpaceGrotesk-Medium.woff2"],
   // glyphes des polices Symbol / Wingdings remappés (≅ ⇒ ✔ ➢…) et secours maths
   ["DejaVu Sans", 400, "normal", "DejaVuSans.woff2"],
   ["DejaVu Sans", 700, "normal", "DejaVuSans-Bold.woff2"],
