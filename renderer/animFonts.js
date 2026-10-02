@@ -17,7 +17,7 @@
 //      coupures de ligne.
 //
 // POURQUOI DES POLICES DE SUBSTITUTION
-//   Les postes des postes clients (et le serveur) n'ont pas forcément Calibri, Cambria… (licence Microsoft).
+//   Les postes clients (et le serveur) n'ont pas forcément Calibri, Cambria… (licence Microsoft).
 //   On embarque des polices LIBRES « métrique-compatibles » (mêmes chasses glyphe par glyphe : Carlito
 //   pour Calibri, Liberation pour Arial/Times/Courier, Caladea pour Cambria…) ou, à défaut, proches.
 //   Le moteur écrit une pile CSS « police d'origine, substitut, générique » : si la police d'origine est

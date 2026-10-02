@@ -58,7 +58,7 @@
   <!-- LMS -->
   <rect x="840" y="96" width="200" height="300" rx="16" fill="#f0fdf4" stroke="#16a34a" stroke-width="2.5"/>
   <text x="940" y="124" text-anchor="middle" class="lbl">le LMS</text>
-  <text x="940" y="142" text-anchor="middle" class="grp">le produit</text>
+  <text x="940" y="142" text-anchor="middle" class="grp">l'hôte</text>
   <rect x="862" y="160" width="156" height="66" rx="9" fill="#fff" stroke="#16a34a"/>
   <text x="940" y="182" text-anchor="middle" class="desc" font-weight="700">FRONT</text>
   <text x="940" y="200" text-anchor="middle" class="note">Front (web)</text>

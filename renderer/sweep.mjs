@@ -30,7 +30,7 @@ const PPT = join(work, 'ppt');
 // Polices : celles servies en production (voir web-fonts.mjs), calculées par diapo plus bas.
 // PAS de rétrécissement de texte côté navigateur (comme en production) : PowerPoint ne recalcule pas
 // l'autofit à l'affichage, il applique le fontScale ENREGISTRÉ dans le fichier — que le moteur a déjà
-// reporté dans le SVG. Rétrécir ici faisait diverger nos captures du rendu attendu.
+// reporté dans le SVG. Rétrécir ici ferait diverger le rendu de l'original PowerPoint.
 
 // slides ayant une réf
 const refNums = readdirSync(refsDir).map(f => (f.match(/slide-(\d+)\.png$/) || [])[1]).filter(Boolean).map(Number).sort((a, b) => a - b);

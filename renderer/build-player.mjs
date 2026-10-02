@@ -35,7 +35,7 @@ const slides = nums.map(n => {
 const fonts = fontsCssFor(slides.map((s) => s.svg).join(''));
 // PAS de rétrécissement de texte côté navigateur (comme en production) : PowerPoint ne recalcule pas
 // l'autofit à l'affichage, il applique le fontScale ENREGISTRÉ dans le fichier — que le moteur a déjà
-// reporté dans le SVG. Rétrécir ici faisait diverger nos captures du rendu attendu.
+// reporté dans le SVG. Rétrécir ici ferait diverger le rendu de l'original PowerPoint.
 
 const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>${esc(name)}</title>
 <style>${fonts}

@@ -63,7 +63,7 @@ for (const n of nums) {
 const fonts = fontsCssFor(cards);
 // PAS de rétrécissement de texte côté navigateur (comme en production) : PowerPoint ne recalcule pas
 // l'autofit à l'affichage, il applique le fontScale ENREGISTRÉ dans le fichier — que le moteur a déjà
-// reporté dans le SVG. Rétrécir ici faisait diverger nos captures du rendu attendu.
+// reporté dans le SVG. Rétrécir ici ferait diverger le rendu de l'original PowerPoint.
 const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>PPTX renderer</title>
 <style>${fonts}
 body{margin:0;background:#333;font:13px system-ui}.card{margin:16px auto;width:min(90vw,1000px);background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.4)}.lbl{background:#222;color:#ddd;padding:4px 10px}.err{background:#511}pre{color:#fbb;white-space:pre-wrap;padding:8px;font-size:11px}</style>
