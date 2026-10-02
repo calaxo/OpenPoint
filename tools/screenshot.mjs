@@ -11,8 +11,8 @@
 // Sans action : une seule capture <préfixe>.png. Chrome : env CHROME_PATH, sinon Chrome installé
 // (C:/Program Files/Google/Chrome/Application/chrome.exe), sinon celui de puppeteer.
 // Code de sortie 1 si une erreur de page (exception JS, console.error, requête échouée) est survenue.
-import puppeteer from 'puppeteer';
-import { existsSync, mkdirSync } from 'node:fs';
+import { launchBrowser } from './browser.mjs';
+import { mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -23,11 +23,9 @@ const pos = argv.filter((a) => !a.startsWith('--size='));
 const [file, prefix, ...actions] = pos;
 if (!file || !prefix) { console.error('usage: node tools/screenshot.mjs <fichier.html> <préfixeSortie> [actions...] [--size=WxH]'); process.exit(2); }
 
-const WIN_CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const executablePath = process.env.CHROME_PATH || (existsSync(WIN_CHROME) ? WIN_CHROME : undefined);
 mkdirSync(dirname(resolve(prefix)), { recursive: true });
 
-const browser = await puppeteer.launch({ executablePath, headless: true, args: ['--no-sandbox', '--allow-file-access-from-files'] });
+const browser = await launchBrowser();
 let errors = 0;
 try {
   const page = await browser.newPage();

@@ -11,8 +11,8 @@
 // installé (Windows), sinon celui de puppeteer.
 // les fonctions passées à page.evaluate / $eval s'exécutent DANS le navigateur :
 /* global document, window, location, getComputedStyle, Image */
-import puppeteer from 'puppeteer';
-import { mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
+import { launchBrowser } from './browser.mjs';
+import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -51,9 +51,7 @@ function check(cond, msg) {
   if (cond) { passes++; console.log('  ok  ', msg); } else { failures++; console.error('  ÉCHEC :', msg); }
 }
 
-const WIN_CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const executablePath = process.env.CHROME_PATH || (existsSync(WIN_CHROME) ? WIN_CHROME : undefined);
-const browser = await puppeteer.launch({ executablePath, headless: true, args: ['--no-sandbox'] });
+const browser = await launchBrowser();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ouvre une page, compte ses erreurs (exception, console.error, requête échouée)

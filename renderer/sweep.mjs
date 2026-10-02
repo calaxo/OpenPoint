@@ -7,7 +7,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PNG } from 'pngjs';
 import pixelmatch from 'pixelmatch';
-import puppeteer from 'puppeteer';
+import { launchBrowser } from '../tools/browser.mjs';
 import { renderSlide } from './pptx-render.mjs';
 import { openDeck } from './lib/deck.mjs';
 import { fontsCssFor } from './web-fonts.mjs'; // polices du LMS (woff2 + métriques PowerPoint)
@@ -42,7 +42,7 @@ function diffOf(minePng, refPng) {
   return { diffPct: +(100*n/(w*h)).toFixed(2), regions };
 }
 
-const browser = await puppeteer.launch({ headless: 'new' });
+const browser = await launchBrowser();
 const page = await browser.newPage();
 await page.setViewport({ width: W, height: H, deviceScaleFactor: 1 });
 const results = [];

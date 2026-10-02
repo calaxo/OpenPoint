@@ -14,21 +14,21 @@
 'use strict';
 
 (function () {
-  var data = OP.readData();
-  var slides = data.slides;
-  var deckEl = document.getElementById('deck');
-  var countEl = document.getElementById('count');
-  var jumpEl = document.getElementById('jump');
-  var cards = []; // index i -> élément .card (même ordre que slides)
+  const data = OP.readData();
+  const slides = data.slides;
+  const deckEl = document.getElementById('deck');
+  const countEl = document.getElementById('count');
+  const jumpEl = document.getElementById('jump');
+  const cards = []; // index i -> élément .card (même ordre que slides)
 
   document.getElementById('deck-name').textContent = data.name;
-  var nHidden = slides.filter(function (s) { return s.hidden; }).length;
+  const nHidden = slides.filter(function (s) { return s.hidden; }).length;
   countEl.textContent = slides.length + ' diapos' + (nHidden ? ' · ' + nHidden + ' masquée' + (nHidden > 1 ? 's' : '') : '');
   jumpEl.max = String(slides.length);
 
   // ─── construction des cartes (vides : le SVG arrive plus tard) ───
   slides.forEach(function (s) {
-    var card = document.createElement('section');
+    const card = document.createElement('section');
     card.className = 'card' + (s.hidden ? ' is-hidden' : '') + (s.error ? ' is-error' : '');
     card.id = 'slide-' + s.pos;
     card.setAttribute('data-pos', String(s.pos));
@@ -38,7 +38,7 @@
       + (s.hidden ? '<span class="badge">masquée</span>' : '')
       + (s.error ? '<span class="badge err">erreur de rendu</span>' : '') + '</div>'
       + '<div class="frame"></div>';
-    var frame = card.querySelector('.frame');
+    const frame = card.querySelector('.frame');
     if (s.error) frame.innerHTML = '<pre>' + OP.esc(s.error) + '</pre>';
     else frame.style.aspectRatio = s.w + ' / ' + s.h;
     deckEl.appendChild(card);
@@ -47,13 +47,13 @@
 
   // ─── insertion paresseuse du SVG ───
   function fill(i) {
-    var card = cards[i], s = slides[i];
+    const card = cards[i], s = slides[i];
     if (!card || s.error || card.hasAttribute('data-filled')) return;
     card.setAttribute('data-filled', '');
     card.querySelector('.frame').innerHTML = OP.resolveImages(s.svg);
   }
   if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function (entries) {
+    const io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
         if (en.isIntersecting) { fill(cards.indexOf(en.target)); io.unobserve(en.target); }
       });
@@ -68,8 +68,9 @@
 
   // index de la diapo « courante » = la dernière dont le haut a passé le bas de la barre
   function currentIndex() {
-    var limit = barHeight() + 24, cur = 0;
-    for (var i = 0; i < cards.length; i++) {
+    const limit = barHeight() + 24;
+    let cur = 0;
+    for (let i = 0; i < cards.length; i++) {
       if (cards[i].getBoundingClientRect().top <= limit) cur = i; else break;
     }
     return cur;
@@ -78,7 +79,7 @@
   function goTo(i) {
     i = Math.max(0, Math.min(cards.length - 1, i));
     fill(i);
-    var top = cards[i].getBoundingClientRect().top + window.scrollY - barHeight() - 8;
+    const top = cards[i].getBoundingClientRect().top + window.scrollY - barHeight() - 8;
     window.scrollTo(0, Math.max(0, top));
     OP.setHashSlide(slides[i].pos);
     updateCurrent(i);
@@ -90,25 +91,25 @@
   }
 
   // l'URL et l'indicateur suivent le défilement (au plus une mise à jour par image)
-  var ticking = false;
+  let ticking = false;
   window.addEventListener('scroll', function () {
     if (ticking) return;
     ticking = true;
     requestAnimationFrame(function () {
       ticking = false;
-      var i = currentIndex();
+      const i = currentIndex();
       OP.setHashSlide(slides[i].pos);
       updateCurrent(i);
     });
   }, { passive: true });
 
   function indexOfPos(pos) {
-    for (var i = 0; i < slides.length; i++) if (slides[i].pos === pos) return i;
+    for (let i = 0; i < slides.length; i++) if (slides[i].pos === pos) return i;
     return -1;
   }
 
   jumpEl.addEventListener('keydown', function (ev) {
-    if (ev.key === 'Enter') { var i = indexOfPos(+jumpEl.value); if (i >= 0) goTo(i); jumpEl.blur(); }
+    if (ev.key === 'Enter') { const i = indexOfPos(+jumpEl.value); if (i >= 0) goTo(i); jumpEl.blur(); }
     ev.stopPropagation(); // les chiffres / j / k tapés ici ne naviguent pas
   });
   document.getElementById('prev').addEventListener('click', function () { goTo(currentIndex() - 1); });
@@ -116,14 +117,14 @@
 
   document.addEventListener('keydown', function (ev) {
     if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
-    var k = ev.key;
+    const k = ev.key;
     if (k === 'j' || k === 'ArrowRight' || k === 'PageDown') { ev.preventDefault(); goTo(currentIndex() + 1); }
     else if (k === 'k' || k === 'ArrowLeft' || k === 'PageUp') { ev.preventDefault(); goTo(currentIndex() - 1); }
   });
 
   function fromHash() {
-    var pos = OP.hashSlide();
-    var i = pos === null ? -1 : indexOfPos(pos);
+    const pos = OP.hashSlide();
+    const i = pos === null ? -1 : indexOfPos(pos);
     if (i >= 0) goTo(i);
   }
   window.addEventListener('hashchange', fromHash);

@@ -14,9 +14,9 @@
 'use strict';
 
 var OP = (function () {
-  var IMAGE_TOKEN = /op-img:(\d+)/g; // même jeton que renderer/lib/images.mjs
-  var data = null;
-  var urls = []; // index -> URL blob: (ou data: URI en repli)
+  const IMAGE_TOKEN = /op-img:(\d+)/g; // même jeton que renderer/lib/images.mjs
+  let data = null;
+  const urls = []; // index -> URL blob: (ou data: URI en repli)
 
   function readData() {
     if (!data) data = JSON.parse(document.getElementById('op-data').textContent);
@@ -26,14 +26,14 @@ var OP = (function () {
   // data:<mime>;base64,<…> -> URL blob: (plus court à insérer, décodé une seule fois)
   function imageUrl(i) {
     if (urls[i]) return urls[i];
-    var uri = readData().images[i] || '';
-    var url = uri;
+    const uri = readData().images[i] || '';
+    let url = uri;
     try {
-      var comma = uri.indexOf(',');
-      var mime = uri.slice(5, uri.indexOf(';'));
-      var bin = atob(uri.slice(comma + 1));
-      var bytes = new Uint8Array(bin.length);
-      for (var k = 0; k < bin.length; k++) bytes[k] = bin.charCodeAt(k);
+      const comma = uri.indexOf(',');
+      const mime = uri.slice(5, uri.indexOf(';'));
+      const bin = atob(uri.slice(comma + 1));
+      const bytes = new Uint8Array(bin.length);
+      for (let k = 0; k < bin.length; k++) bytes[k] = bin.charCodeAt(k);
       url = URL.createObjectURL(new Blob([bytes], { type: mime }));
     } catch (e) { url = uri; } // repli : la data: URI elle-même
     urls[i] = url;
@@ -49,12 +49,12 @@ var OP = (function () {
   }
 
   function hashSlide() {
-    var m = /^#(\d+)$/.exec(location.hash || '');
+    const m = /^#(\d+)$/.exec(location.hash || '');
     return m ? +m[1] : null;
   }
 
   function setHashSlide(pos) {
-    var h = '#' + pos;
+    const h = '#' + pos;
     if (location.hash !== h) history.replaceState(null, '', h);
   }
 
