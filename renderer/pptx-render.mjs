@@ -134,8 +134,9 @@
  *      partiraient dans le SVG.
  *    - Non gérés (constat à la lecture du code) : p:sld@showMasterSp / cNvPr@hidden (les formes du
  *      master/layout sont toujours dessinées), @nodeType de la timeline (chaque p:par de la séquence
- *      = une étape de clic), custGeom HÉRITÉ du layout (repli rectangle), héritage de géométrie de
- *      placeholder depuis le MASTER (seul le layout est indexé).
+ *      = une étape de clic), custGeom HÉRITÉ du layout (repli rectangle), héritage de GÉOMÉTRIE de
+ *      placeholder depuis le MASTER (seul le layout est indexé pour la géométrie — mais son lstStyle
+ *      de texte, lui, est bien lu : maillon de la cascade avant p:txStyles).
  * ═══════════════════════════════════════════════════════════════════════════════════════════════ */
 
 // ████ §A ─ IMPORTS ET PARSEURS XML ──────────────────────────────────────────────────────────────
@@ -964,10 +965,12 @@ function imageHref(pptDir, target, embed) {
 // ================= placeholders (héritage layout/master) =================
 // Une forme-texte de la diapo hérite géométrie + fill + styles de texte de SON placeholder
 // de layout (identifié par type:idx). Le layout hérite lui-même du masque.
-// placeholderGeom(pptDir, n, rels de la diapo) -> { geom: { "type:idx": { xfrm, spPr, style, lstStyle,
-// bodyPr } } }, tout en arbre PLAT, lu depuis le layout (cache). Seuls les p:sp de 1er niveau du spTree
-// sont indexés (pas les p:pic ni les placeholders dans des groupes). Le master n'est pas consulté :
-// un placeholder de layout sans xfrm ne reçoit pas celui du master.
+// placeholderGeom(pptDir, n, rels de la diapo) -> { geom, mgeom } : geom = { "type:idx": { xfrm, spPr,
+// style, lstStyle, bodyPr } } lu du LAYOUT ; mgeom = { "type:idx": { lstStyle, bodyPr } } lu du MASTER
+// (STYLE DE TEXTE seulement, pour la cascade : c'est le master qui porte le plus souvent la police/la
+// taille du titre et du corps). Tout en arbre PLAT, mis en cache. Seuls les p:sp de 1er niveau du spTree
+// sont indexés (pas les p:pic ni les placeholders dans des groupes). La GÉOMÉTRIE n'est pas reprise du
+// master : un placeholder de layout sans xfrm ne reçoit pas celui du master.
 function placeholderGeom(pptDir, slideNo, rels) {
   const layoutTgt = Object.values(rels).find((t) => t && t.includes('slideLayout'));
   const geom = {};
@@ -985,7 +988,26 @@ function placeholderGeom(pptDir, slideNo, rels) {
     if (!geom[key]) geom[key] = { xfrm: sp['p:spPr']?.['a:xfrm'], spPr: sp['p:spPr'], style: sp['p:style'],
       lstStyle: sp['p:txBody']?.['a:lstStyle'], bodyPr: sp['p:txBody']?.['a:bodyPr'] };
   }
-  return { geom };
+  // MAILLON MANQUANT de la cascade : les placeholders du MASTER (même clé « type:idx »). C'est le master
+  // qui porte le plus souvent la POLICE et la TAILLE du titre / du corps (le layout ne les redéfinit pas).
+  // Sans ce maillon, un titre héritait de p:txStyles (titleStyle = défaut du fichier) : police et taille
+  // fausses (vu : titre « Arial 14 » au lieu du « Space Grotesk 30 » du master). Le master est joint au
+  // layout (« ../slideMasters/slideMasterN.xml »). On n'indexe QUE le style de texte (lstStyle), pas la
+  // géométrie (cf. commentaire ci-dessus).
+  const mgeom = {};
+  const mTgt = Object.values(relsOf(layoutPath)).find((t) => t && t.includes('slideMaster'));
+  if (mTgt) {
+    const mPath = join(dirname(layoutPath), mTgt);
+    if (existsSync(mPath)) {
+      const mt = cachedParse(mPath, 'flat')['p:sldMaster']?.['p:cSld']?.['p:spTree'];
+      for (const sp of arr(mt?.['p:sp'])) {
+        const ph = sp['p:nvSpPr']?.['p:nvPr']?.['p:ph']; if (!ph) continue;
+        const key = `${ph['@type']??'body'}:${ph['@idx']??'0'}`;
+        if (!mgeom[key]) mgeom[key] = { lstStyle: sp['p:txBody']?.['a:lstStyle'], bodyPr: sp['p:txBody']?.['a:bodyPr'] };
+      }
+    }
+  }
+  return { geom, mgeom };
 }
 
 // ================= rendu d'une forme =================
@@ -1030,7 +1052,7 @@ export function renderSlide(pptDir, slideNo, opts = {}) {
   const themePath = (masterPath && themeTgt) ? norm(masterPath, themeTgt) : null;
   const ctx = loadContext(pptDir, themePath);
   _ctxMinorFont = ctx.minorFont || 'Calibri'; // pour la mesure des cellules de tableau (cellTextHeight)
-  const { geom: phGeom } = placeholderGeom(pptDir, slideNo, rels);
+  const { geom: phGeom, mgeom: mphGeom } = placeholderGeom(pptDir, slideNo, rels);
 
   // La diapo elle-même n'est PAS mise en cache (propre à cet appel) : parse ordonné direct.
   const slidePath = join(pptDir, 'slides', `slide${slideNo}.xml`);
@@ -1528,6 +1550,8 @@ export function renderSlide(pptDir, slideNo, opts = {}) {
     const ph = deepFind(sp, 'p:ph');
     const key = ph ? `${at(ph)['@type']??'body'}:${at(ph)['@idx']??'0'}` : null;
     const inh = key ? phGeom[key] : null;
+    // lstStyle du placeholder de MASTER (maillon entre le layout et p:txStyles du master)
+    const inhM = key ? mphGeom?.[key] : null;
     // boîte : a:xfrm de la forme, sinon celui du placeholder de layout (sans flip hérité) ; aucune
     // boîte -> forme non dessinée
     let g = getXfrm(spPrO);
@@ -1637,7 +1661,7 @@ export function renderSlide(pptDir, slideNo, opts = {}) {
     const phKind = !ph ? 'none' : (phType === 'title' || phType === 'ctrTitle') ? 'title' : 'body';
     // renderText reçoit w/h en EMU (m.cx, m.cy), le txBody plat ET ordonné, et les éléments hérités
     // du layout (lstStyle, bodyPr, style) pour la cascade de styles
-    const txt = suppressText ? '' : renderText(spFlat['p:txBody'], m.cx, m.cy, phKind, inh?.lstStyle, first(sp, 'p:txBody'), inh?.bodyPr, spFlat['p:style'] || inh?.style, textRect);
+    const txt = suppressText ? '' : renderText(spFlat['p:txBody'], m.cx, m.cy, phKind, inh?.lstStyle, first(sp, 'p:txBody'), inh?.bodyPr, spFlat['p:style'] || inh?.style, textRect, inhM?.lstStyle);
     const spid = at(deepFind(sp, 'p:cNvPr'))['@id'] || '';
     const strokeAttr = stroke !== 'none' ? `stroke="${stroke}" stroke-width="${u(sw)}"${dash?` stroke-dasharray="${dash}"`:''}${joinCap}${markers}` : '';
     // Tracé sur le même chemin que le remplissage (cas courant) OU chemin de tracé distinct (formes
@@ -2003,7 +2027,8 @@ export function renderSlide(pptDir, slideNo, opts = {}) {
   // CASCADE DES PROPRIÉTÉS D'UN RUN (du plus fort au plus faible), reproduisant PowerPoint :
   //   a:rPr du run  >  a:pPr du paragraphe (algn, marL, indent, puces, lnSpc…)
   //   >  a:lstStyle de la forme (niveau lvl)  >  lstStyle du placeholder de layout (ou style de tableau)
-  //   >  p:txStyles du master (titleStyle / bodyStyle selon phKind)  >  p:defaultTextStyle de
+  //   >  lstStyle du placeholder de MASTER  >  p:txStyles du master (titleStyle / bodyStyle selon phKind)
+  //   >  p:defaultTextStyle de
   //   presentation.xml  >  p:style/a:fontRef de la forme  >  couleur tx1 / taille 18 pt / police mineure.
   // Le niveau lvl d'un paragraphe = a:pPr@lvl + 1 (lvl 0..8 -> lvl1pPr..lvl9pPr).
   //
@@ -2016,7 +2041,7 @@ export function renderSlide(pptDir, slideNo, opts = {}) {
   // Autofit : a:normAutofit@fontScale / @lnSpcReduction (valeurs CALCULÉES et ENREGISTRÉES par
   // PowerPoint) sont appliquées telles quelles ; a:spAutoFit (forme ajustée au texte) n'a pas de
   // traitement particulier ; a:noAutofit -> débordement libre.
-  function renderText(txBody, w, h, phKind, inhLst, txBodyO, inhBodyPr, shapeStyle, textRect) {
+  function renderText(txBody, w, h, phKind, inhLst, txBodyO, inhBodyPr, shapeStyle, textRect, mstLst) {
     if (!txBody) return '';
     const arr = (x)=> x===undefined?[]:Array.isArray(x)?x:[x];
     const bodyPr = txBody['a:bodyPr'] || {};
@@ -2030,7 +2055,7 @@ export function renderSlide(pptDir, slideNo, opts = {}) {
       // d'origine n'est pas modifié). textRect n'est pas repassé (il est exprimé dans le repère non tourné).
       // eaVert (texte vertical est-asiatique, caractères empilés) est approximé par une rotation de 90°.
       const flat = { ...txBody, 'a:bodyPr': { ...bodyPr, '@vert': 'horz' } };
-      const inner = renderText(flat, h, w, phKind, inhLst, txBodyO, { ...(inhBodyPr || {}), '@vert': 'horz' }, shapeStyle, null);
+      const inner = renderText(flat, h, w, phKind, inhLst, txBodyO, { ...(inhBodyPr || {}), '@vert': 'horz' }, shapeStyle, null, mstLst);
       if (!inner) return '';
       const ang = vert === 'vert270' ? 270 : 90;
       return `<g transform="translate(${u(w/2)} ${u(h/2)}) rotate(${ang}) translate(${u(-h/2)} ${u(-w/2)})">${inner}</g>`;
@@ -2082,9 +2107,12 @@ export function renderSlide(pptDir, slideNo, opts = {}) {
     const resolveFont = (tf) => !tf ? null
       : /^\+mn-/.test(tf) ? ctx.minorFont : /^\+mj-/.test(tf) ? ctx.majorFont : tf;
     // style par niveau, du + prioritaire au - : lstStyle INLINE de la forme -> lstStyle du
-    // placeholder de LAYOUT hérité -> txStyles du MASQUE.
+    // placeholder de LAYOUT hérité -> lstStyle du placeholder de MASTER -> txStyles du MASQUE.
     const localLst = txBody['a:lstStyle'] || {};
     const inheritLst = inhLst || {};
+    // lstStyle du placeholder de MASTER : maillon de la cascade entre le layout (inheritLst) et
+    // p:txStyles du master (styleLvls). Vide si la forme n'est pas un placeholder.
+    const mstLstS = mstLst || {};
     // niveau absent -> repli sur le niveau 1 de la même liste (choix de ce code : évite de perdre le
     // style d'un lstStyle qui ne définit que lvl1pPr)
     const lvlOf = (lst, lvl) => lst[`a:lvl${lvl}pPr`] || lst['a:lvl1pPr'];
@@ -2106,29 +2134,32 @@ export function renderSlide(pptDir, slideNo, opts = {}) {
     // sz/b/color/font/algn.
     const lvlStyle = (lvl) => {
       const loc = lvlOf(localLst, lvl), inh = lvlOf(inheritLst, lvl);
-      const ld = loc?.['a:defRPr'], id = inh?.['a:defRPr'];
+      // mp = niveau du placeholder de MASTER ; s'intercale entre le layout (inh) et p:txStyles (mas)
+      const mp = lvlOf(mstLstS, lvl);
+      const ld = loc?.['a:defRPr'], id = inh?.['a:defRPr'], md = mp?.['a:defRPr'];
       const mas = styleLvls[lvl] || styleLvls[1] || {};
       const dt = dflt[lvl] || dflt[1] || {};
       return {
-        sz: (ld?.['@sz'] ? +ld['@sz']/100 : null) ?? (id?.['@sz'] ? +id['@sz']/100 : null) ?? mas.sz ?? dt.sz,
-        color: colOf(ld) ?? colOf(id) ?? mas.color ?? dt.color ?? fontRefColor,
-        font: ld?.['a:latin']?.['@typeface'] || id?.['a:latin']?.['@typeface'] || mas.font || dt.font || fontRefFont,
+        sz: (ld?.['@sz'] ? +ld['@sz']/100 : null) ?? (id?.['@sz'] ? +id['@sz']/100 : null) ?? (md?.['@sz'] ? +md['@sz']/100 : null) ?? mas.sz ?? dt.sz,
+        color: colOf(ld) ?? colOf(id) ?? colOf(md) ?? mas.color ?? dt.color ?? fontRefColor,
+        font: ld?.['a:latin']?.['@typeface'] || id?.['a:latin']?.['@typeface'] || md?.['a:latin']?.['@typeface'] || mas.font || dt.font || fontRefFont,
         // gras : le niveau le PLUS SPÉCIFIQUE qui définit @b gagne (un b="0" du layout doit battre
         // le b="1" du master) — un simple || laisserait le master l'emporter à tort.
         b: ld?.['@b'] !== undefined ? ld['@b'] === '1'
          : id?.['@b'] !== undefined ? id['@b'] === '1'
+         : md?.['@b'] !== undefined ? md['@b'] === '1'
          : mas.b,
-        algn: loc?.['@algn'] || inh?.['@algn'] || mas.algn,
-        bu: bulletOf(loc) ?? bulletOf(inh) ?? mas.bu,
-        marL: (loc?.['@marL'] ? +loc['@marL'] : null) ?? (inh?.['@marL'] ? +inh['@marL'] : null) ?? mas.marL,
-        ind: (loc?.['@indent'] ? +loc['@indent'] : null) ?? (inh?.['@indent'] ? +inh['@indent'] : null) ?? mas.ind,
-        marR: (loc?.['@marR'] ? +loc['@marR'] : null) ?? (inh?.['@marR'] ? +inh['@marR'] : null) ?? mas.marR,
+        algn: loc?.['@algn'] || inh?.['@algn'] || mp?.['@algn'] || mas.algn,
+        bu: bulletOf(loc) ?? bulletOf(inh) ?? bulletOf(mp) ?? mas.bu,
+        marL: (loc?.['@marL'] ? +loc['@marL'] : null) ?? (inh?.['@marL'] ? +inh['@marL'] : null) ?? (mp?.['@marL'] ? +mp['@marL'] : null) ?? mas.marL,
+        ind: (loc?.['@indent'] ? +loc['@indent'] : null) ?? (inh?.['@indent'] ? +inh['@indent'] : null) ?? (mp?.['@indent'] ? +mp['@indent'] : null) ?? mas.ind,
+        marR: (loc?.['@marR'] ? +loc['@marR'] : null) ?? (inh?.['@marR'] ? +inh['@marR'] : null) ?? (mp?.['@marR'] ? +mp['@marR'] : null) ?? mas.marR,
         // interligne hérité (lstStyle inline → layout → master). Ex. cartes = spcPct 90 % : sans ça
         // j'utilise 1.15 → lignes trop espacées → dérive verticale vs PowerPoint (vu au comparateur).
-        lnSpc: loc?.['a:lnSpc'] ?? inh?.['a:lnSpc'] ?? mas.lnSpc,
-        // spcBef/spcAft résolus dans la même chaîne (inline lstStyle → layout → master)
-        spcBef: loc?.['a:spcBef'] ?? inh?.['a:spcBef'] ?? mas.spcBef,
-        spcAft: loc?.['a:spcAft'] ?? inh?.['a:spcAft'] ?? mas.spcAft,
+        lnSpc: loc?.['a:lnSpc'] ?? inh?.['a:lnSpc'] ?? mp?.['a:lnSpc'] ?? mas.lnSpc,
+        // spcBef/spcAft résolus dans la même chaîne (inline lstStyle → layout → master → master placeholder → txStyles)
+        spcBef: loc?.['a:spcBef'] ?? inh?.['a:spcBef'] ?? mp?.['a:spcBef'] ?? mas.spcBef,
+        spcAft: loc?.['a:spcAft'] ?? inh?.['a:spcAft'] ?? mp?.['a:spcAft'] ?? mas.spcAft,
       };
     };
     // ── Boucle des paragraphes ──
@@ -2143,6 +2174,15 @@ export function renderSlide(pptDir, slideNo, opts = {}) {
       const pPr = p['a:pPr'] || {};
       const lvl = (+pPr['@lvl'] || 0) + 1;
       const def = lvlStyle(lvl);
+      // Hauteur de ligne CSS du paragraphe = lnSpc du paragraphe, sinon hérité (lot/master via def.lnSpc),
+      // sinon lineH du conteneur. Sert de line-height au <div> ET à chacun de ses runs (cf. lh0 plus bas).
+      // Sans ça (ancien « line-height:0 » sur les runs), la boîte de ligne était nulle : un paragraphe qui
+      // passe à la ligne voyait ses lignes, et les paragraphes d'une même zone de texte se superposaient
+      // tous sur la même ligne de base (bug « texte qui se chevauche »).
+      const lnSpcNode = pPr['a:lnSpc'] || def.lnSpc;
+      const paraLH = lnSpcNode?.['a:spcPct']?.['@val'] ? (+lnSpcNode['a:spcPct']['@val']/100000*1.2*(1-lnRed)).toFixed(3)
+                   : lnSpcNode?.['a:spcPts']?.['@val'] ? (+lnSpcNode['a:spcPts']['@val']/100*(1-lnRed)).toFixed(1)+'px'
+                   : lineH.toFixed(3);
       // ST_TextAlignType : l / ctr / r / just (dist, justLow, thaiDist -> 'left' ici)
       const algn = { ctr:'center', r:'right', just:'justify' }[pPr['@algn'] || def.algn] || 'left';
       let runs = arr(p['a:r']);
@@ -2332,11 +2372,14 @@ export function renderSlide(pptDir, slideNo, opts = {}) {
         // espacement : spc du run + correction d'arrondi des chasses façon PowerPoint (advanceFix)
         const ls = spcPx + (allSym ? 0 : advanceFix(famCss, !!b, !!i, sz, rPr['@cap'] === 'all' ? raw.toUpperCase() : raw));
         const spc = Math.abs(ls) >= 0.001 ? `letter-spacing:${ls.toFixed(3)}px;` : '';
-        // line-height 0 pour un run pas plus grand que le paragraphe : sa boîte ne grandit plus la ligne. En
-        // CSS, des polices mêlées (Poppins + symboles en Times) s'alignent sur la ligne de base et leur union
-        // dépasse L (34 px au lieu de 24) ; PowerPoint garde 1,2 x taille. Un run PLUS grand agrandit la
-        // ligne, comme chez lui.
-        const lh0 = sz <= firstSz + 0.01 ? 'line-height:0;' : '';
+        // line-height du paragraphe (paraLH) pour un run pas plus grand que le 1er : sa boîte garde la
+        // hauteur d'UNE ligne sans jamais dépasser celle du paragraphe. En CSS, des polices mêlées (Poppins
+        // + symboles en Times) s'alignaient sur la ligne de base et leur union dépassait L (34 px au lieu de
+        // 24) ; un line-height UNITAIRE (paraLH) donne 1,2 x la taille de CHAQUE run indépendamment de ses
+        // métriques -> plus de dépassement. Un run PLUS grand agrandit la ligne, comme chez PowerPoint.
+        // (Avant : « line-height:0 » ; il annulait la boîte de ligne et faisait s'effondrer le <div> à 0 ->
+        // lignes retournées à la ligne ET paragraphes superposés au même y.)
+        const lh0 = sz <= firstSz + 0.01 ? `line-height:${paraLH};` : '';
         if (raw.trim()) paraInk = true; // paragraphe « encré » (voir le &#8203; en fin de <div>)
         // Ordre des déclarations CSS du run : taille, line-height 0, couleur, police, gras, italique,
         // décoration, casse, letter-spacing, vertical-align (avec jeton VA_TOK), surlignage, contour.
@@ -2672,6 +2715,30 @@ export function extractTiming(pptDir, slideNo) {
     if (tagOf(node) === 'p:cTn') yield node;
     for (const c of kids(node)) if (typeof c === 'object') yield* allCTn(c);
   }
+}
+
+// ████ §P2 ─ extractTransition : TRANSITION DE DIAPO (<p:transition>) ──────────────────────────
+// Beaucoup de decks (dont les gabarits Slidesgo/Google Slides) n'ont AUCUNE animation d'objet
+// (<p:timing>) mais une TRANSITION par diapo : <mc:AlternateContent><mc:Choice Requires="p159">
+// <p:transition p14:dur="2000"><p159:morph option="byObject"/></p:transition></mc:Choice>
+// <mc:Fallback><p:transition spd="slow"><p:fade/></p:transition></mc:Fallback></mc:AlternateContent>.
+// On lit la variante moderne (morph) et on retombe sur le fade ; @p14:dur (ms) = durée. Le player
+// (build-player.mjs) rejoue cette transition au changement de diapo. Renvoie null si la diapo n'en a pas.
+export function extractTransition(pptDir, slideNo) {
+  const text = readFileSync(join(pptDir, 'slides', `slide${slideNo}.xml`), 'utf8');
+  // 1re <p:transition> = la variante « Choice » (morph) quand il y a un <mc:AlternateContent>, sinon
+  // la transition simple. Le glouton non-greedy s'arrête à la 1re fermeture.
+  const m = text.match(/<p:transition\b[^>]*>([\s\S]*?)<\/p:transition>/);
+  if (!m) return null;
+  const opener = m[0].slice(0, m[0].indexOf('>') + 1);
+  const dur = +(opener.match(/p14:dur="(\d+)"/)?.[1] || 0); // durée en ms (p14:dur), sinon défaut
+  const body = m[1];
+  // type : morph si présent, sinon fade, sinon le 1er effet reconnu ; dir pour les poussées/balayages
+  const type = /<p159:morph\b/.test(body) ? 'morph'
+             : /<p:fade\b/.test(body) ? 'fade'
+             : (body.match(/<p:(push|wipe|cover|split|reveal|zoom|dissolve|cut)\b/)?.[1]) || 'fade';
+  const dir = body.match(/<p:(?:push|wipe|cover|split)[^>]*\bdir="([^"]+)"/)?.[1] || null;
+  return { type, dur: dur || 2000, dir };
 }
 
 // ████ §Q ─ SÉRIALISATION ET EXPORTS ─────────────────────────────────────────────────────────────

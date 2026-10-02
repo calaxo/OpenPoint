@@ -66,8 +66,11 @@ les foreignObject HTML cassent avec des `font-size` en centaines de milliers de 
   réelles (Poppins) doivent être **embarquées** (`@font-face`) pour la fidélité métrique.
 - **Héritage de style de run** (du + prioritaire au -) : `rPr` du run → `lstStyle` INLINE de la
   forme → `lstStyle` du **placeholder de LAYOUT** hérité (couleur/taille/police par niveau) →
-  `p:txStyles` du **MASQUE** (`titleStyle/bodyStyle/otherStyle`). C'est indispensable : sans le
-  niveau layout, le texte des cartes sort clair au lieu de sombre.
+  `lstStyle` du **placeholder de MASTER** (c'est LUI qui porte souvent la police / la taille du
+  titre et du corps) → `p:txStyles` du **MASQUE** (`titleStyle/bodyStyle/otherStyle`) →
+  `defaultTextStyle` de la présentation. Le niveau layout est indispensable (sans lui, le texte des
+  cartes sort clair au lieu de sombre) ; le niveau master aussi (sans lui, un titre hérite d'un
+  `titleStyle` générique — vu : « Arial 14 » au lieu du « Space Grotesk 30 » du master).
 - **Autofit** (`<a:normAutofit>`) : PowerPoint réduit la police (et l'interligne via
   `lnSpcReduction`) pour faire tenir le texte. Le `fontScale` stocké est appliqué ; quand il est
   absent (PowerPoint calcule à l'affichage), un **autofit navigateur** (mesure + réduction) prend

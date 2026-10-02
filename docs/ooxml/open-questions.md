@@ -46,7 +46,11 @@
 - [ ] Charts (`c:chart`) : structure chart1.xml + xlsx embarqué → rendre barres/lignes/camemberts.
 
 ## Polices
-- [ ] Polices embarquées `ppt/fonts/*.fntdata` : format (TTF obfusqué ?), extraction, @font-face.
+- [~] Polices embarquées `ppt/fonts/*.fntdata` : **EOT v2** (Embedded OpenType), `Flags & 0x4` =
+      TTCOMPRESSED (MicroType Express / MTX), sous-ensemble. Le TTF est donc COMPRESSÉ (pas simplement
+      « obfusqué ») : l'extraction passe par un décodeur MTX (réf. libeot). Non fait → un deck qui
+      embarque une police non libre tombe sur le substitut générique ; on embarque donc les équivalents
+      libres des polices courantes (voir `renderer/fonts/`, `renderer/fonts/build-google-fonts.py`).
 - [ ] Substituts métriques libres (Liberation Sans/Serif ↔ Arial/Times) : où les prendre (LibreOffice).
 
 ## Divers

@@ -36,8 +36,9 @@ Les règles transverses qui reviennent partout. À garder en tête en lisant la 
   cercle de découpe d'une image), **remplissage** (carte blanche, cercle de badge), **styles de
   texte** (`lstStyle`). Sans ça : cartes/cercles manquants, texte de mauvaise couleur.
 - **Style de run**, du + prioritaire au - : `rPr` du run → `lstStyle` INLINE de la forme →
-  `lstStyle` du placeholder de LAYOUT hérité → `p:txStyles` du MASQUE (title/body/other, par
-  niveau lvl1..9) → `defaultTextStyle` de la présentation.
+  `lstStyle` du placeholder de LAYOUT hérité → `lstStyle` du placeholder de MASTER (police/taille
+  du titre et du corps) → `p:txStyles` du MASQUE (title/body/other, par niveau lvl1..9) →
+  `defaultTextStyle` de la présentation.
 - **Spécificité des booléens (`b`/`i`) ≠ « OU »** : un niveau plus spécifique qui définit `@b="0"`
   doit BATTRE un `@b="1"` hérité (ex. layout titre `b="0"` sur master titre `b="1"` → titre NON gras).
   Un simple `a || b || c` laisse le master l'emporter à tort → prendre le 1er niveau qui DÉFINIT `@b`.

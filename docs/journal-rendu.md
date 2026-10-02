@@ -3,6 +3,29 @@
 > Chronologie des travaux sur le **rendu** (distinct de `ooxml/progress-log.md` qui suit le reverse
 > d'animation). Voir aussi [`ARCHITECTURE.md`](ARCHITECTURE.md) et [`police-fidelite-suite.md`](police-fidelite-suite.md).
 
+## 2026-10 — Fidélité fine (retours utilisateur : texte qui se chevauche, flèches, animations)
+
+- **Texte qui se chevauche** (paragraphes d'une même zone de texte, ET lignes d'un paragraphe retourné
+  à la ligne, tous empilés sur la même ligne de base) : les runs portaient `line-height:0` (pour ne pas
+  subir l'union des métriques de polices mêlées). Quand TOUS les runs d'un paragraphe étaient ≤ au 1er,
+  la boîte de ligne valait 0 → le `<div>` s'effondrait à hauteur nulle (VÉRIFIÉ : un `<div>` dont le seul
+  contenu est un span `line-height:0` a une hauteur de 0 dans Chrome). Fix : chaque run reçoit la hauteur
+  de ligne du paragraphe (`paraLH` = lnSpc du paragraphe, sinon héritée, sinon `lineH` du conteneur) —
+  même effet anti-inflation qu'avant (hauteur UNITAIRE, indépendante des métriques de la police), mais la
+  boîte de ligne garde la bonne hauteur. Validé visuellement : d.4/5/8/34 (`Besoins fonctionnels`,
+  « How to create a project proposal », « POUR LE CAMPUS d'exemple ») sans aucun chevauchement ;
+  `check.mjs` = 0 erreur ; `node --test` = 89/89.
+- **Transitions de diapo** : ce deck (gabarit Slidesgo) n'a AUCUNE animation d'objet
+  (`<p:timing>`, 0 occurrence sur 66 diapos) mais une **transition morph** (repli fade) sur chaque diapo.
+  Nouveau `extractTransition()` (pptx-render.mjs) + `playSlideTransition()` dans `build-player.mjs` qui
+  rejouent la transition au changement de diapo (fondu + léger zoom pour morph, glissement pour
+  push/wipe). Le moteur d'entrée par objet (`extractTiming`) est inchangé.
+- **Connu** : d.32 (gabarit Slidesgo dont le thème a été « aplati » en Arial) → le corps se coupe en 7
+  lignes au lieu de ~6 et déborde sous sa boîte (chevauchement « Solution 4 »). C'est un écart de
+  MÉTRIQUES de police (police d'origine perdue à la fusion), pas un bug de cascade : le thème du fichier
+  déclare Arial (majeur = mineur = Arial) et le layout `noAutofit` — PowerPoint appliquerait donc Arial.
+
+
 ## 2026-07 — Fidélité PPTX (retours utilisateur, chaque correctif protégé + committé)
 
 Méthode : oracle = PowerPoint COM ; protection = hash SVG des ~700 diapos avant/après + triptyques
