@@ -1,7 +1,8 @@
 // ═══ [PPTX · COULEURS] ═══ couleur DrawingML (srgbClr, schemeClr… + lumMod/shade/tint/alpha) -> CSS.
-// ████ §K ─ COULEURS DRAWINGML ──────────────────────────────────────────────────────────────────
+import { presetHex } from './preset-colors.mjs';
+
 // Une couleur DrawingML (§20.1.2.3) = une couleur de base (srgbClr, schemeClr, sysClr, prstClr,
-// scrgbClr ; hslClr n'est pas géré ici) + une liste de TRANSFORMATIONS enfants (lumMod, lumOff,
+// scrgbClr, hslClr) + une liste de TRANSFORMATIONS enfants (lumMod, lumOff,
 // shade, tint, alpha…). Ex. « accent1 assombri 25 % » = <a:schemeClr val="accent1"><a:lumMod
 // val="75000"/></a:schemeClr>.
 // ================= couleurs =================
@@ -44,9 +45,14 @@ function resolveColorFlat(node, ctx) {
   if (node['a:srgbClr']) { hex = node['a:srgbClr']['@val']; mods = node['a:srgbClr']; }
   else if (node['a:schemeClr']) { hex = schemeHex(node['a:schemeClr']['@val']); mods = node['a:schemeClr']; }
   else if (node['a:sysClr']) { hex = node['a:sysClr']['@lastClr'] ?? '000000'; mods = node['a:sysClr']; }
-  else if (node['a:prstClr']) { hex = ({ black:'000000', white:'FFFFFF', red:'FF0000' })[node['a:prstClr']['@val']] ?? '888888'; mods = node['a:prstClr']; }
-  // prstClr : seuls black / white / red sont connus (le reste -> gris) ; les autres noms de
-  // ST_PresetColorVal ne sont pas tabulés.
+  // prstClr : couleur nommée (ST_PresetColorVal, table CSS/X11 de preset-colors.mjs) ; inconnue -> gris
+  else if (node['a:prstClr']) { hex = presetHex(node['a:prstClr']['@val']) ?? '888888'; mods = node['a:prstClr']; }
+  // hslClr : teinte en 1/60000 de degré, saturation et luminance en 1/1000 de % (§20.1.2.3.13)
+  else if (node['a:hslClr']) {
+    const c = node['a:hslClr'];
+    const rgb = rgbFromHsl(((+c['@hue'] || 0) / 60000 / 360) % 1, Math.min(1, (+c['@sat'] || 0) / 100000), Math.min(1, (+c['@lum'] || 0) / 100000));
+    hex = rgb.map((v) => v.toString(16).padStart(2, '0')).join(''); mods = c;
+  }
   // scrgbClr : composantes en % (0-100000), traitées comme du sRVB linéairement (pas de conversion
   // gamma) ; retour immédiat, SANS appliquer les transformations enfants.
   else if (node['a:scrgbClr']) { const c = node['a:scrgbClr']; const to = (v)=>Math.round(parseInt(v)/100000*255); return { r:to(c['@r']), g:to(c['@g']), b:to(c['@b']), a:1 }; }

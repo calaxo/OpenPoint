@@ -265,3 +265,14 @@ test('serialize : échappe les valeurs d\'attribut', () => {
   const node = { 'a:x': [], ':@': { '@v': 'a&b' } };
   assert.equal(serialize(node), '<a:x v="a&amp;b"></a:x>');
 });
+
+// ───────────────────────── couleurs prédéfinies / HSL ─────────────────────────
+test('resolveColorFlat : prstClr (table CSS, abréviations dk/lt/med) et hslClr', () => {
+  const ctx = { clr: {}, clrMap: null };
+  assert.deepEqual(resolveColorFlat({ 'a:prstClr': { '@val': 'dkBlue' } }, ctx), { r: 0, g: 0, b: 139, a: 1 });
+  assert.deepEqual(resolveColorFlat({ 'a:prstClr': { '@val': 'ltGray' } }, ctx), { r: 211, g: 211, b: 211, a: 1 });
+  assert.deepEqual(resolveColorFlat({ 'a:prstClr': { '@val': 'medPurple' } }, ctx), { r: 147, g: 112, b: 219, a: 1 });
+  assert.deepEqual(resolveColorFlat({ 'a:prstClr': { '@val': 'inconnu' } }, ctx), { r: 136, g: 136, b: 136, a: 1 });
+  // hslClr : 120° (vert), saturation 100 %, luminance 50 %
+  assert.deepEqual(resolveColorFlat({ 'a:hslClr': { '@hue': '7200000', '@sat': '100000', '@lum': '50000' } }, ctx), { r: 0, g: 255, b: 0, a: 1 });
+});
