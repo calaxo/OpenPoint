@@ -76,7 +76,7 @@
   <text x="762" y="238" class="note">intègre le HTML/PDF</text>
 
   <text x="40" y="450" class="grp">Origine du dépôt</text>
-  <text x="40" y="472" class="note">Né du besoin d'afficher des PowerPoint animés dans le LMS sans PowerPoint (POC les suites bureautiques abandonné). Le reverse du moteur</text>
+  <text x="40" y="472" class="note">Né du besoin d'afficher des PowerPoint animés dans la plateforme sans PowerPoint. Le reverse du moteur</text>
   <text x="40" y="490" class="note">d'animation (docs/moteur-animation.md, binaire-ppcore.md…) a prouvé la faisabilité ; le moteur de rendu maison en découle.</text>
   <text x="40" y="516" class="note">NB : le renderer est un dépôt SÉPARÉ du LMS. Il produit des fichiers Web que le LMS peut ensuite intégrer/servir.</text>
 </svg>

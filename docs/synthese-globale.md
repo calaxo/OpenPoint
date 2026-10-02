@@ -89,7 +89,7 @@ Le sous-type encode la direction en bitmask (wipe : 1=↑ 2=↓ 4=← 8=→ ; fl
 
 ## Fichiers du repo
 
-- Format : `tools/*.mjs`, `poc/player.html`
+- Format : `tools/*.mjs` (parseurs d'animation + lecteur POC)
 - Binaire statique : `binary/scan-strings.mjs`, `binary/dump-region.mjs`, `binary/xref.py`,
   `binary/disasm.py`, `binary/pe-info.py`
 - Binaire dynamique : `binary/frida_probe.py`, `binary/dyn_hooks.py`

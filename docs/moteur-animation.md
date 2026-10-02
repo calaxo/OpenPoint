@@ -192,7 +192,7 @@ Validées par la ré-exécution dans `poc/player.html` :
 2. **Cible = groupe** : `spid` peut désigner un `p:grpSp` ; l'animation s'applique alors à
    **toutes les formes membres**.
 3. **Placeholders** : une forme `p:ph` sans `<a:xfrm>` hérite sa géométrie du slideLayout
-   (voire du master) — même piège que celui documenté sur le POC les suites bureautiques du LMS.
+   (voire du master) — piège classique des moteurs d'affichage e-learning.
 4. **`p:bldLst`** (après `tnLst`) décrit la « construction » : `<p:bldP spid grpId animBg="1"/>`
    par forme animée ; `build="p"` déclencherait un build **par paragraphe** (la cible devient
    `<p:txEl><p:pRg st end/>`). Corpus : builds par forme entière uniquement.
@@ -223,8 +223,8 @@ Trois stratégies, maintenant qu'on sait ce qu'il y a dedans :
 1. **Ré-exécution web** (la voie prouvée par ce POC) : parser `<p:timing>` (≈300 lignes de
    Node), rendre le `spTree`, implémenter les behaviors. La *timeline* est la partie facile et
    100 % fiable ; la difficulté réelle est le **rendu des formes** (custGeom, texte riche,
-   héritages layout/master) — c'est là que le POC reste approximatif et c'est là que les suites bureautiques
-   apportait sa valeur.
+   héritages layout/master) — c'est là que le POC reste approximatif, et là que les suites bureautiques
+   complètes apportent leur valeur.
 2. **Rendu hybride** : fond de diapo rendu en image (LibreOffice/PowerPoint → PNG par forme ou
    par calque), timeline rejouée par-dessus en HTML. Contourne le rendu des formes en gardant
    les animations natives.

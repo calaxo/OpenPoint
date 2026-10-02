@@ -63,8 +63,8 @@ function targetsOf(e){
     .filter(d => { const k = +d.getAttribute('data-par'); return k >= e.par.from && k <= e.par.to; });
   return [host];
 }
-// Transition de DIAPO (p:transition) rejouée au changement de diapo. Le deck gabarit Slidesgo n'a AUCUNE
-// animation d'objet (<p:timing>) mais une transition morph (repli fade) sur CHAQUE diapo : sans ceci,
+// Transition de DIAPO (p:transition) rejouée au changement de diapo. Le deck d'exemple (gabarit Slidesgo)
+// n'a AUCUNE animation d'objet (<p:timing>) mais une transition morph (repli fade) sur CHAQUE diapo : sans ceci,
 // avancer d'une diapo ne montrerait aucune animation. Approximation : fondu + léger zoom pour morph,
 // fondu pour fade, glissement pour push/wipe (selon @dir). Le conteneur #slide est animé en CSS.
 function playSlideTransition(t){

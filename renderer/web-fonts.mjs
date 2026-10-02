@@ -1,14 +1,14 @@
-// ═══ Polices web des outils (viewer, player, sweep) — MÊMES polices que le LMS ═══
+// ═══ Polices web des outils (viewer, player, sweep) — MÊMES polices que la plateforme hôte ═══
 //
 // POURQUOI ce fichier
 //   Les outils de ce dépôt (build.mjs, build-player.mjs, sweep.mjs) affichaient les diapos avec les
-//   anciennes polices TTF (Poppins + substituts), SANS le calage de métriques que le LMS applique.
+//   anciennes polices TTF (Poppins + substituts), SANS le calage de métriques appliqué en production.
 //   Résultat : une comparaison pixel (sweep) mesurait un rendu qui n'est jamais celui servi.
-//   On passe désormais par animFonts.js, le module du LMS, pour obtenir EXACTEMENT le même CSS.
+//   On passe désormais par animFonts.js, le module de polices de l'hôte, pour obtenir EXACTEMENT le même CSS.
 //
 // CE QUE FAIT animFonts.getFontsCss()
 //   - lit chaque fichier .woff2 de renderer/fonts/ (liste FACES dans animFonts.js) ;
-//   - l'inline en data: URI (le LMS l'injecte dans une iframe à origine opaque, qui ne peut rien
+//   - l'inline en data: URI (l'hôte l'injecte dans une iframe à origine opaque, qui ne peut rien
 //     télécharger : il faut que les polices soient DANS le document) ;
 //   - ajoute ascent-override / descent-override / line-gap-override à partir de fonts/metrics.json :
 //     ce sont les métriques « win » (usWinAscent/usWinDescent) que PowerPoint utilise pour caler ses

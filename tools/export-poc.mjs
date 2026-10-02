@@ -90,7 +90,7 @@ function collectShapes(node, rels, xform, out, parentGroups = [], phGeom = {}) {
     if (!cNvPr) continue;
     let xfrm = sp['p:spPr']?.['a:xfrm'] ?? sp['p:xfrm'];
     if (!xfrm?.['a:off']) {
-      // placeholder sans géométrie propre -> héritage layout (piège connu du POC les suites bureautiques)
+      // placeholder sans géométrie propre -> héritage layout (piège classique)
       const ph = nv?.['p:nvPr']?.['p:ph'];
       if (ph) xfrm = phGeom[`${ph['@type'] ?? 'body'}:${ph['@idx'] ?? '0'}`];
     }

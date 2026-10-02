@@ -3,12 +3,12 @@
 > ## 👉 Nouveau sur le projet ? Commence par **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
 > Vue d'ensemble illustrée (schémas SVG) : *qui fait quoi* entre le **viewer** (défilement), le mode
 > **présentation** (animé), le moteur **PowerPoint**, le moteur **Word**, la voie **PDF fidèle**, et le
-> lien avec le **LMS**. Carte du code : **[renderer/README.md](renderer/README.md)**.
+> lien avec la **plateforme** d'apprentissage. Carte du code : **[renderer/README.md](renderer/README.md)**.
 >
 > Aujourd'hui ce dépôt est surtout un **moteur de rendu** `.pptx`/`.docx` → HTML/SVG en JS pur (sans
 > PowerPoint/Word). La partie ci-dessous documente son **origine** : le reverse du moteur d'animation.
 
-Étude née d'un besoin concret côté **LMS** : impossible de sortir proprement des decks PowerPoint
+Étude née d'un besoin concret : impossible de sortir proprement des decks PowerPoint
 riches en animations. Avant de retenter quoi que ce soit, ce repo répond à la question préalable :
 **comment fonctionne le moteur d'animation de PowerPoint, exactement ?**
 
@@ -19,7 +19,7 @@ Pour comprendre le format à fond et savoir quoi implémenter ensuite :
 code), concepts/pièges, questions ouvertes. Les docs techniques se déposent dans
 `docs/ooxml/specs/` (local, non commité).
 
-## Lire un PPTX sans PowerPoint (le but pratique pour le LMS)
+## Lire un PPTX sans PowerPoint (le cas d'usage pratique)
 
 Moteur de rendu maison **PPTX → SVG en JS pur**, sans PowerPoint : voir
 **[docs/lecteur-pptx.md](docs/lecteur-pptx.md)**. Rend les 28 diapos du deck fidèlement (thème
@@ -60,7 +60,7 @@ sombre, masque/layout, coins arrondis, images, texte hérité). `node renderer/b
 | `binary/scan-strings.mjs` `dump-region.mjs` | Localiser le vocabulaire / lire les tables de données |
 | `binary/xref.py` `disasm.py` `pe-info.py` | Xrefs + désassemblage x86-64 (capstone/pefile) |
 | `binary/frida_probe.py` `dyn_hooks.py` `dyn_profile.py` | Instrumentation runtime (frida + COM) |
-| `specimen/sample.pptx` + `extracted/` | Le deck d'étude (28 diapos, 280 effets) |
+| `specimen/` | Deck(s) d'étude local — **non versionné** (cf. `.gitignore`) |
 | `tools/dump-com.ps1` | Vue PowerPoint du moteur via COM → `specimen/com-dump.json` |
 | `tools/parse-timing.mjs` | Parseur `<p:timing>` → `specimen/timeline.json` |
 | `tools/crosscheck.mjs` | Validation croisée XML↔COM + table preset↔effet |

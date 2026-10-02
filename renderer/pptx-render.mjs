@@ -19,8 +19,8 @@
  *    diapo : une chaîne SVG autonome (renderSlide) + sa timeline d'animation (extractTiming).
  *    Aucun PowerPoint ni LibreOffice n'intervient : tout est relu depuis le XML OOXML
  *    (ECMA-376 : PresentationML §19, DrawingML §20, DrawingML-texte §21, Office Math §22).
- *    Consommateurs : build.mjs (diapos statiques), build-player.mjs et le runtime hôte
- *    (lecteur animé du LMS).
+ *    Consommateurs : build.mjs (diapos statiques) et build-player.mjs (lecteur animé), plus tout runtime
+ *    d'animation hôte qui consomme le même SVG.
  *
  * 2. PIPELINE DE renderSlide(pptDir, slideNo)
  *    a) Résolution de la chaîne d'héritage par les fichiers .rels :
@@ -104,7 +104,7 @@
  *      ordonné (serialize) et on le re-parse en plat (`PF.parse('<root …>' + serialize(n) + '</root>')`)
  *      pour lire propriétés et texte. Quand l'ordre compte (a:br, a:fld, OMML, tabulations), on
  *      revient au nœud ordonné correspondant (paramètre txBodyO, paraSeqO, paraO).
- *    - ATTRIBUTS LUS PAR LE RUNTIME D'ANIMATION (build-player.mjs, le runtime hôte) :
+ *    - ATTRIBUTS LUS PAR LE RUNTIME D'ANIMATION (build-player.mjs, runtime hôte) :
  *        * data-spid="<id>" sur le <g> de chaque forme / groupe / tableau = p:cNvPr@id. Préfixé 'm'
  *          (master) ou 'l' (layout) pour éviter les collisions : la timeline ne cible que la diapo,
  *          donc le player fait querySelector('[data-spid="<spid brut>"]') et doit tomber sur la

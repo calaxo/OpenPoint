@@ -12,8 +12,8 @@
   contenu est un span `line-height:0` a une hauteur de 0 dans Chrome). Fix : chaque run reçoit la hauteur
   de ligne du paragraphe (`paraLH` = lnSpc du paragraphe, sinon héritée, sinon `lineH` du conteneur) —
   même effet anti-inflation qu'avant (hauteur UNITAIRE, indépendante des métriques de la police), mais la
-  boîte de ligne garde la bonne hauteur. Validé visuellement : d.4/5/8/34 (`Besoins fonctionnels`,
-  « How to create a project proposal », « POUR LE CAMPUS d'exemple ») sans aucun chevauchement ;
+  boîte de ligne garde la bonne hauteur. Validé visuellement sur un deck à texte dense (d.4/5/8/34)
+  sans aucun chevauchement ;
   `check.mjs` = 0 erreur ; `node --test` = 89/89.
 - **Transitions de diapo** : ce deck (gabarit Slidesgo) n'a AUCUNE animation d'objet
   (`<p:timing>`, 0 occurrence sur 66 diapos) mais une **transition morph** (repli fade) sur chaque diapo.
