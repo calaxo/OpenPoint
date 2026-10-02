@@ -16,7 +16,7 @@
 //   hiddenSlides(pptDir, nums) -> Set des diapos masquées parmi nums.
 //   deckName(pptxPath) -> nom assaini (même règle que openDeck).
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from 'node:fs';
-import { join, dirname, basename, resolve, sep } from 'node:path';
+import { join, dirname, resolve, sep } from 'node:path';
 import { unzipSync } from 'fflate';
 import { slideOrder } from '../pptx-render.mjs';
 import { convertMetafiles } from '../metafiles.mjs';
