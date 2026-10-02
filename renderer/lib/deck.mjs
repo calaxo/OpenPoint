@@ -23,7 +23,8 @@ import { convertMetafiles } from '../metafiles.mjs';
 
 // Nom de travail d'un deck : « Mon deck (v2).pptx » -> « Mon_deck__v2_ »
 export function deckName(pptxPath) {
-  return basename(pptxPath).replace(/\.pptx$/i, '').replace(/[^\w.-]/g, '_');
+  // séparateurs / ET \ : un chemin Windows doit donner le même nom sous Linux (basename ne coupe que sur /)
+  return String(pptxPath).split(/[\\/]/).pop().replace(/\.pptx$/i, '').replace(/[^\w.-]/g, '_');
 }
 
 // Garde anti zip-slip : une entrée ZIP ne doit JAMAIS sortir du dossier de travail.
