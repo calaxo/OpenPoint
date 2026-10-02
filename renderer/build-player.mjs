@@ -3,7 +3,7 @@
 // Usage : node renderer/build-player.mjs "specimen/deck A/deck.pptx"
 // Sortie : renderer/player-out.html  (clic = animation suivante / diapo suivante ; ← → r f)
 
-import { renderSlide, extractTiming } from './pptx-render.mjs';
+import { renderSlide, extractTiming, extractTransition } from './pptx-render.mjs';
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,7 +26,9 @@ const nums = readdirSync(join(PPT, 'slides')).filter(f => /^slide\d+\.xml$/.test
 const slides = nums.map(n => {
   const { svg } = renderSlide(PPT, n, { embedImages: true });
   const { steps, animatedSpids } = extractTiming(PPT, n);
-  return { n, svg, steps, animatedSpids };
+  // transition de DIAPO (p:transition) : jouée au changement de diapo (morph/fade/push…)
+  const trans = extractTransition(PPT, n);
+  return { n, svg, steps, animatedSpids, trans };
 });
 
 // Polices : exactement celles servies en production, limitées aux familles citées par les diapos (voir web-fonts.mjs).
@@ -61,6 +63,27 @@ function targetsOf(e){
     .filter(d => { const k = +d.getAttribute('data-par'); return k >= e.par.from && k <= e.par.to; });
   return [host];
 }
+// Transition de DIAPO (p:transition) rejouée au changement de diapo. Le deck gabarit Slidesgo n'a AUCUNE
+// animation d'objet (<p:timing>) mais une transition morph (repli fade) sur CHAQUE diapo : sans ceci,
+// avancer d'une diapo ne montrerait aucune animation. Approximation : fondu + léger zoom pour morph,
+// fondu pour fade, glissement pour push/wipe (selon @dir). Le conteneur #slide est animé en CSS.
+function playSlideTransition(t){
+  slideEl.style.transition = 'none';
+  if (!t){ slideEl.style.opacity = '1'; slideEl.style.transform = ''; return; }
+  const dur = Math.max(120, t.dur || 800);
+  let from = { opacity: '0', transform: '' };
+  if (t.type === 'morph') from = { opacity: '0', transform: 'scale(1.04)' };
+  else if (t.type === 'push' || t.type === 'cover' || t.type === 'wipe' || t.type === 'reveal' || t.type === 'split') {
+    const p = (t.dir === 'l' || t.dir === 'u') ? 8 : -8;
+    from = { opacity: '0', transform: (t.dir === 'u' || t.dir === 'd') ? 'translateY(' + p + '%)' : 'translateX(' + p + '%)' };
+  }
+  Object.assign(slideEl.style, from);
+  slideEl.getBoundingClientRect(); // reflow -> la transition part de l'état initial
+  requestAnimationFrame(() => {
+    slideEl.style.transition = 'opacity ' + dur + 'ms ease-out, transform ' + dur + 'ms ease-out';
+    slideEl.style.opacity = '1'; slideEl.style.transform = 'none';
+  });
+}
 function loadSlide(i){
   si = (i + SLIDES.length) % SLIDES.length; step = 0;
   const s = SLIDES[si];
@@ -71,6 +94,7 @@ function loadSlide(i){
   // cache les paragraphes qui ont une entrée par paragraphe (bldP)
   for (const st of s.steps) for (const e of st.effects)
     if (e.cls === 'entr' && e.par) targetsOf(e).forEach(el => el.classList.add('anim-hidden'));
+  playSlideTransition(s.trans);
   updateHud();
 }
 function updateHud(){ const s=SLIDES[si]; hud.textContent = 'diapo '+s.n+'   ('+(si+1)+'/'+SLIDES.length+')'+(s.steps.length?'   clic '+step+'/'+s.steps.length:''); }
