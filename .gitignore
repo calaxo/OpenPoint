@@ -27,3 +27,6 @@ renderer/player-out.html
 
 renderer/.qa-baseline.json
 *.docx
+
+# decks synthetiques generes (tools/make-fixtures.mjs)
+test/fixtures/out/

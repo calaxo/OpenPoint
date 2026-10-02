@@ -4,7 +4,7 @@
 //
 // Usage : node renderer/scan.mjs "specimen/deck A"
 
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { unzipSync, strFromU8 } from 'fflate';
 

@@ -60,7 +60,7 @@ for (const n of refNums) {
   svg = svg.replace('width="100%"', `width="${W}" height="${H}"`);
   const html = `<!doctype html><meta charset=utf8><style>${fontsCssFor(svg)}*{margin:0}html,body{background:#0c0d10}</style><body>${svg}</body>`;
   await page.setContent(html, { waitUntil: 'load' });
-  try { await page.evaluate(() => document.fonts.ready); } catch {}
+  try { await page.evaluate(() => globalThis.document.fonts.ready); } catch {}
   const buf = await page.screenshot({ clip: { x: 0, y: 0, width: W, height: H } });
   const ref = readFileSync(join(refsDir, `slide-${n}.png`));
   try {

@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const timeline = JSON.parse(readFileSync(join(ROOT, 'specimen', 'timeline.json'), 'utf8'));
-const comDump = JSON.parse(readFileSync(join(ROOT, 'specimen', 'com-dump.json'), 'utf8').replace(/^﻿/, ''));
+const comDump = JSON.parse(readFileSync(join(ROOT, 'specimen', 'com-dump.json'), 'utf8').replace(/^\uFEFF/, ''));
 
 const mapping = new Map(); // preset -> Set(effectName)
 let pairs = 0, mismatches = 0;
