@@ -3,7 +3,7 @@ import { flatOf, at, first, deepFind, esc } from '../xml.mjs';
 import { u } from '../units.mjs';
 import { presetGeomParts, presetTextRect } from '../../preset-geom.mjs';
 import { custGeomParts } from '../geometry.mjs';
-import { imageHref } from '../parts.mjs';
+import { imageHref, phInherit } from '../parts.mjs';
 import { resolveColorFlat, cssColor } from '../color.mjs';
 import { getXfrm, applyTf } from './walk.mjs';
 import { fillFromSpPrFlat, gradId, dashArray, lineMarker } from './paint.mjs';
@@ -28,10 +28,8 @@ export function renderSp(rc, sp, tf) {
   const spPrO = first(sp, 'p:spPr');
   // placeholder : héritage depuis le layout (géométrie + fill + styles de texte)
   const ph = deepFind(sp, 'p:ph');
-  const key = ph ? `${at(ph)['@type']??'body'}:${at(ph)['@idx']??'0'}` : null;
-  const inh = key ? phGeom[key] : null;
-  // lstStyle du placeholder de MASTER (maillon entre le layout et p:txStyles du master)
-  const inhM = key ? mphGeom?.[key] : null;
+  // inh = placeholder du LAYOUT, inhM = celui du MASTER (maillon entre le layout et p:txStyles)
+  const { inh, inhM } = ph ? phInherit(phGeom, mphGeom, ph) : {};
   // boîte : a:xfrm de la forme, sinon celui du placeholder de layout (sans flip hérité) ; aucune
   // boîte -> forme non dessinée
   let g = getXfrm(spPrO);

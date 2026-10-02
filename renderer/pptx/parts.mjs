@@ -1,7 +1,7 @@
 // ═══ [PPTX · PARTS OPC] ═══ relations (.rels), images (data URI), placeholders hérités du layout/master.
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { cachedParse, fileStamp as _stamp } from './xml.mjs';
+import { cachedParse, fileStamp as _stamp, at } from './xml.mjs';
 // ████ §M ─ RELATIONS (.rels) ET IMAGES ─────────────────────────────────────────────────────────
 // Chaque part OOXML référence les autres (layout, master, thème, images, graphiques…) par un
 // identifiant r:id / r:embed (« rId3 ») résolu dans son fichier _rels/<part>.rels (OPC, ECMA-376
@@ -117,6 +117,26 @@ function placeholderGeom(pptDir, slideNo, rels) {
   }
   return { geom, mgeom };
 }
+// phInherit(phGeom, mphGeom, nœud p:ph ORDONNÉ) -> { inh, inhM } : placeholders du layout et du master
+// dont hérite une forme <p:ph> de la diapo.
+//   - layout : clé exacte « type:idx » (@type absent -> 'body', @idx absent -> '0') ;
+//   - master : clé exacte, sinon par TYPE comme PowerPoint (un master n'a qu'un placeholder par type :
+//     titre / ctrTitle -> 'title' ; corps / subTitle / obj -> 'body' ; dt, ftr, sldNum… -> même type).
+//     Ex. layout « titre idx=2 » (numéros 01/02/03 des gabarits Slidesgo) : sans ce repli, la police
+//     et la taille du titre du master étaient perdues (Arial 14 du style par défaut).
+const MASTER_PH_TYPE = { title: 'title', ctrTitle: 'title', body: 'body', subTitle: 'body', obj: 'body' };
+export function phInherit(phGeom, mphGeom, ph) {
+  const type = at(ph)['@type'] ?? 'body', key = `${type}:${at(ph)['@idx'] ?? '0'}`;
+  const inh = phGeom?.[key] ?? null;
+  let inhM = mphGeom?.[key] ?? null;
+  if (!inhM && mphGeom) {
+    const mt = MASTER_PH_TYPE[type] ?? type;
+    const k = Object.keys(mphGeom).find((k) => k.split(':')[0] === mt);
+    inhM = k ? mphGeom[k] : null;
+  }
+  return { inh, inhM };
+}
+
 // slideOrder(pptDir) -> numéros N des slides/slideN.xml dans l'ORDRE DE PRÉSENTATION : celui de
 // p:presentation/p:sldIdLst (chaque p:sldId@r:id renvoie, via presentation.xml.rels, à une part de
 // diapo). Le numéro de FICHIER n'est pas l'ordre d'affichage : une diapo déplacée dans PowerPoint garde

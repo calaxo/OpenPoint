@@ -372,6 +372,8 @@ function textDeck() {
   // slide4 : layout « Sombre » SANS couleur explicite : fond et texte viennent du clrMapOvr du layout
   slides.push(slide({ layout: 2, shapes: [
     sp({ id: 2, name: 'Titre 1', ph: 'type="title"', paras: [para('Couleurs héritées du layout sombre')] }),
+    // titre idx=7 : absent du layout ET du master (clé exacte) -> hérite du titre du master PAR TYPE
+    sp({ id: 3, name: 'Numéro 01', ph: 'type="title" idx="7"', x: 36, y: 200, w: 200, h: 60, paras: [para('01')] }),
   ] }));
   // ordre de présentation : slide2, slide1, slide3, slide4
   return assemble(slides, { order: [2, 1, 3, 4] });

@@ -2,7 +2,7 @@
 import { flatOf, at, first, deepFind, deepFindSuffix, esc } from '../xml.mjs';
 import { u } from '../units.mjs';
 import { presetPath, custGeomPath } from '../geometry.mjs';
-import { imageHref } from '../parts.mjs';
+import { imageHref, phInherit } from '../parts.mjs';
 import { getXfrm, applyTf } from './walk.mjs';
 import { effectFilter, imageFilter } from './effects.mjs';
 
@@ -15,8 +15,7 @@ export function renderPic(rc, pic, tf) {
   const { curRels, pptDir, embed, uid, clips, spidPfx, phGeom } = rc;
   // placeholder image : géométrie (forme de découpe) héritée du layout
   const ph = deepFind(pic, 'p:ph');
-  const key = ph ? `${at(ph)['@type']??'body'}:${at(ph)['@idx']??'0'}` : null;
-  const inh = key ? phGeom[key] : null;
+  const { inh } = ph ? phInherit(phGeom, null, ph) : {};
   const spPrO = first(pic, 'p:spPr');
   let g = getXfrm(spPrO);
   if (!g && inh?.xfrm) { const xf=inh.xfrm, o=xf['a:off'], e=xf['a:ext']; if (o&&e) g={ x:+o['@x'],y:+o['@y'],cx:+e['@cx'],cy:+e['@cy'],rot:+(xf['@rot']||0) }; }

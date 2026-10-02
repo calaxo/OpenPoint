@@ -190,3 +190,11 @@ test('tables-charts d.3 : images entière / rognée / ellipse', () => {
   assert.match(svg, /data:image\/png;base64,/);
   assert.equal((svg.match(/<clipPath /g) || []).length, 2); // rognage (rect) + ellipse
 });
+
+test('text d.4 : placeholder « titre idx=7 » sans équivalent exact -> style du titre du master (par type)', () => {
+  const { svg } = r('text', 4);
+  const i = svg.indexOf('>01<');
+  const span = svg.slice(svg.lastIndexOf('<span', i), i);
+  assert.match(span, /font-size:32\.00px/); // titleStyle du master : sz 3200
+  assert.match(span, /font-weight:700/);    // b="1"
+});
