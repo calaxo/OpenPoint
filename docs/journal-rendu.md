@@ -72,7 +72,7 @@ optimisant le temps. Outil `coverage.mjs` : compte les tags XML lus par le moteu
 - **Surlignage de texte** (`a:highlight`) → fond coloré derrière le run (comme Word). Additif.
 - **Jointures/bouts de trait** (`a:round`/`a:bevel` → `stroke-linejoin` ; `@cap` → `stroke-linecap`) :
   on n'émet QUE les valeurs non-défaut SVG → corrige les pics « miter » sur les lignes de courant des
-  schémas (ex. CHAP.07 VENT d.40), sans bruit ailleurs.
+  schémas (ex. deck-12 d.40), sans bruit ailleurs.
 - **Cache de parse** (thème/master/layout/rels/presentation) keyé chemin+mtime+taille : `renderSlide`
   reparse ~64 Ko/diapo alors que N diapos partagent master/layout/thème. **−30 % deck seul, −37 % batch.**
   Transparence PROUVÉE : hash SVG identique sur 864 diapos avant/après (`102c8c115664f302`).
@@ -94,7 +94,7 @@ diff vs baseline) → chaque modif affiche EXACTEMENT les diapos changées + 0 e
 - **`a:effectRef`** : ombre/lueur de thème (effectStyleLst ajouté au ctx) quand pas d'effectLst explicite.
   2 diapos (Decision Making #13/#22, ombres subtiles), vérifié.
 - **`a:pattFill`** : remplissage à motif → tuile `<pattern>` SVG (points/lignes/diagonales/grille par
-  famille de preset). Rendait 'none' avant. 2 diapos (CHAP.13 précipitations RA/SN enfin visibles).
+  famille de preset). Rendait 'none' avant. 2 diapos (précipitations RA/SN enfin visibles).
 - **Contour de texte** (`rPr>a:ln`) → `-webkit-text-stroke`. 9 diapos (labels A/D sur cartes satellite
   enfin lisibles). Additif pur.
 - **GRAPHIQUES** (`c:chart`) : nouveau module **`chart-render.mjs`** (colonnes/barres groupées+empilées,

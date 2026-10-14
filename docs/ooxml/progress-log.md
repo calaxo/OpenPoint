@@ -4,7 +4,7 @@
 - `21e175e` **rendu math OMML** : `renderMath()` (fraction m:f empilée, parenthèses m:d, exposant/indice
   m:sSup/sSub, racine m:rad, n-aire m:nary), intercalé avec le texte via le parse ORDONNÉ (txBodyO).
   **NFKC** pour convertir les Mathematical Alphanumeric (𝜌𝑓𝒅𝑷 → ρ f d P, absents de Poppins).
-  Piège : nœud `#text` a `tagOf='#text'` (≠ undefined) → tester `#text` en premier. VENT d.21 formules OK.
+  Piège : nœud `#text` a `tagOf='#text'` (≠ undefined) → tester `#text` en premier. deck-12 d.21 formules OK.
 - `92253db` **interligne** : `line-height:1.15` unitless se calculait contre 16px (défaut du `.af`) au lieu
   de la taille réelle → ligne trop haute → pied de page 9pt COUPÉ dans sa boîte. Fix : `font-size` sur le
   `<div>` paragraphe = taille du 1er run. Corrige la coupe ; cartes d.5 OK.
@@ -14,14 +14,14 @@
 - `769060c` **MCE `mc:AlternateContent`** (GROS fix générique) : `walk()`/`walkChild()` descend
   maintenant dans la branche `mc:Choice` (sinon `Fallback`). Avant, toute forme enveloppée
   (boîtes de FORMULES OMML sous `mc:Choice Requires="a14"`, présent 1-5×/deck dans TOUT le corpus)
-  était INVISIBLE → « il manque carrément du texte ». VENT d.21 : 2 boîtes de formules réapparues.
+  était INVISIBLE → « il manque carrément du texte ». deck-12 d.21 : 2 boîtes de formules réapparues.
   **Reste : le math OMML lui-même** (`<a14:m><m:oMath>` fractions Vg=1/ρf·dP/dl) non rendu → « Vg = »
   suivi d'un blanc. TODO : rendu des fractions (num/den empilés) ; un linéaire serait illisible.
 - `bfd8850` **fillRef idx=0 = aucun remplissage** : forme `arc` ouverte rendue en trait seul
-  (le 45° de VENT d.10 était un camembert bleu plein). Générique.
+  (le 45° de deck-12 d.10 était un camembert bleu plein). Générique.
 - `6969c28` **ajout `upArrow`** : ABSENT du XML ECMA (presetShapeDefinitions.xml a upDownArrow en
   DOUBLE + upArrowCallout mais PAS upArrow — bug de la spec !). Les flèches vers le haut tombaient
-  en rectangle (barre) : VENT d.20 vecteurs PGF, d.14 AIR CHAUD. Défini en miroir de downArrow.
+  en rectangle (barre) : deck-12 d.20 vecteurs PGF, d.14 AIR CHAUD. Défini en miroir de downArrow.
 - **Constat important** : la plupart des écarts signalés par l'utilisateur (3ᵉ image cassée d.5,
   herbe noire d.10/14) étaient des **captures PRÉ-fix** — sur rendu FRAIS ils sont corrects.
 - **Reste (métriques Poppins, non corrigé — risque de régression)** : pastille de carte qui
@@ -36,8 +36,8 @@
 ### Fait aujourd'hui (tout committé, `OpenPoint`)
 Fixes rendu moteur maison, validés contre **référence PowerPoint pixel-perfect** (nouvel oracle :
 `scratchpad/ppt-export.ps1` exporte chaque diapo via COM ; helper de rendu maison `scratchpad/rs.mjs`) :
-- `5e55810` rotation de GROUPE (rot/flip) → manches à air inclinées.
-- `1cffe6c` `color-interpolation-filters="sRGB"` → images assombries plus écrasées en noir (fond nuageux).
+- `5e55810` rotation de GROUPE (rot/flip) → formes inclinées.
+- `1cffe6c` `color-interpolation-filters="sRGB"` → images assombries plus écrasées en noir (fond photo).
 - `7652dd1` champ `slidenum` = vrai n° (fini « ‹N°› ») + autofit navigateur seulement pertinent.
 - `871d475` régression Sommaire corrigée : autofit toutes boîtes cap 20(normAutofit)/6(autres) +
   coupe des espaces de fin. **⚠ ces réglages autofit sont délicats — re-vérifier Sommaire+pied de page
@@ -72,7 +72,7 @@ Sauvegarde : **commit git après chaque cible**. Note mémoire à chaque jalon.
 
 ## 2026-07-22 — ✅ FIDÉLITÉ DIAPO TITRE (retour utilisateur) — commit `07b1dec`
 
-Diagnostic sur VENT s1 (comparaison vraie diapo vs rendu). 3 bugs corrigés :
+Diagnostic sur deck-12 s1 (comparaison vraie diapo vs rendu). 3 bugs corrigés :
 1. **Titre trop gras** : le layout titre a `defRPr b="0"` qui doit battre le master `b="1"`, mais mon
    `id?.b==='1' || mas.b` tombait sur le master → gras à tort. Fix = 1er niveau qui DÉFINIT `@b` gagne.
 2. **Puces « • » parasites + texte pied de page invisible** : les zones de texte LIBRES (sans `p:ph` :
@@ -82,8 +82,8 @@ Diagnostic sur VENT s1 (comparaison vraie diapo vs rendu). 3 bugs corrigés :
 3. **« Placement bizarre »** : en grande partie mon HARNAIS de test qui n'embarquait pas Poppins →
    repli plus large → débordement. Avec Poppins embarqué, placement fidèle. (Piège noté dans concepts.md.)
 
-Validé visuel : VENT/TEMPERATURE/NEURO s1 (titres légers, pastilles, pieds de page propres) +
-PRECIPITATIONS d.5 (cartes blanches, texte foncé NON régressé) + TEMPERATURE d.28 (puces de contenu
+Validé visuel : deck-12/deck-10/deck-06 s1 (titres légers, pastilles, pieds de page propres) +
+deck-08 d.5 (cartes blanches, texte foncé NON régressé) + deck-10 d.28 (puces de contenu
 légitimes conservées). 548 diapos 0 erreur. Reste mineur : « TURBULENCE vu à » (texte à grand espace
 interne passant sous un badge).
 
@@ -94,10 +94,10 @@ interne passant sous un badge).
 - **7. bldP** (commit `4287f55`) : `renderText` émet `data-par` par paragraphe ; `extractTiming` lit
   `spTgt>txEl>pRg` ; le player cache/révèle au niveau paragraphe. Validé sample d.26 (build progressif).
 - **8. a14:imgEffect** (commit `8d51280`) : `deepFindFlat` sur le blip → `brightnessContrast` (feComponentTransfer
-  linéaire lum/contraste) + `saturation` (saturate). Validé VENT d.10 (12 images corrigées).
+  linéaire lum/contraste) + `saturation` (saturate). Validé deck-12 d.10 (12 images corrigées).
 - **9. Rejeu mouvement** (commit `c4b3001`) : `parseMotion` (animMotion path → translation, animRot → rotation) ;
   player = `animateTransform` SMIL **additive** (se compose avec le transform de base, pas de clobber) ;
-  rotation centrée via `getBBox`. Validé CIRCU_GEN d.10 (translation) + VENT d.44 (spin 360°, anémomètre).
+  rotation centrée via `getBBox`. Validé deck-05 d.10 (translation) + deck-12 d.44 (spin 360°).
 
 Reste ❌ (mineur) : `animScale` (scale centré pas exprimable en 1 transform additif), `animClr`, `anim`
 keyframes fines ppt_*, `colorTemperature`/`sharpenSoften`, reflection/innerShdw, déclencheurs interactifs.
@@ -128,14 +128,14 @@ Wrapper `<g>` inerte au rendu statique (0 régression, 548 diapos 0 erreur).
 **Cible 4 (srcRect)** committée `926d173` : recadrage source `a:srcRect` (l/t/r/b millièmes %) —
 image agrandie (/vw,/vh) + décalée + clippée. **Découverte : AUCUN `c:chart` dans le corpus** (les
 10 graphicFrames = tableaux déjà rendus) → charts abandonné. srcRect au contraire massif (~125).
-Validé visuel d.5 PRECIPITATIONS (4 cartes « Objectifs » recadrées correctement).
+Validé visuel d.5 deck-08 (4 cartes « Objectifs » recadrées correctement).
 
 **Cible 5 (defaultTextStyle)** committée `565d351` : chargé par niveau depuis presentation.xml,
 ajouté en **repli final** de `lvlStyle` (sz/color/font) — comble le texte hors placeholder au lieu de
 `#000`/`#fff` en dur. `clrMapOvr` vérifié NON utilisé dans le corpus (pas la cause du bug couleur).
 
-**Passe de non-régression visuelle** : 7 diapos sur 4 decks (TEMPERATURE d.28/34, CIRCU_GEN d.16,
-BASES_PHY d.67, PRECIPITATIONS d.5, ALTIMETRIE d.19) → toutes fidèles, 0 régression. Corpus 548
+**Passe de non-régression visuelle** : 7 diapos sur 4 decks (deck-10 d.28/34, deck-05 d.16,
+deck-04 d.67, deck-08 d.5, deck-01 d.19) → toutes fidèles, 0 régression. Corpus 548
 diapos 0 erreur à chaque commit.
 
 ### État & prochaines cibles possibles (aucune bloquante)
@@ -153,10 +153,10 @@ Fidélité statique très forte. Restent, par ordre d'intérêt :
 
 **Cible 2 (texte)** committée `6a406a6` : rPr `cap`(all/small)/`baseline`(exposant-indice)/
 `spc`(espacement)/`strike`(barré) + pPr `lnSpc`/`spcBef`/`spcAft` (unités spec : spcPct millièmes %,
-spcPts centièmes pt). Validé visuel d.16 CIRCU_GEN (« 40ᵉᵐᵉ » en exposant), titres MAJUSCULES.
+spcPts centièmes pt). Validé visuel d.16 deck-05 (« 40ᵉᵐᵉ » en exposant), titres MAJUSCULES.
 
 **Cible 3 (effets)** : `effectFilter` (ombre+glow+softEdge → filtre SVG mergé) sur formes ET images ;
-`imageFilter` (grayscl/duotone/alphaModFix) sur les blips. Validé visuel d.67 BASES_PHY (glow bords).
+`imageFilter` (grayscl/duotone/alphaModFix) sur les blips. Validé visuel d.67 deck-04 (glow bords).
 Reste ❌ : reflection (rare), innerShdw, a14:imgEffect (corrections MS 2010), a:clrChange.
 
 Corpus 548 diapos, 0 erreur à chaque étape. Prochaine cible (4) au choix : **charts** (`c:chart`,
@@ -225,7 +225,7 @@ Objectif user : « un algo qui compare deux images à chaque fois » + « fait t
 - Réfs oracle : export COM PowerPoint de TOUTES les diapos (≈615) via `scratchpad/export-all-refs.ps1`.
 
 ### Résultat : les plus gros écarts sont DOMINÉS par les images photo (plafond moteur, pas des bugs)
-Le TOP du corpus = diapos avec grandes photos (cockpit d'intro ×12 decks, ciel/nuages, anatomie NEURO).
+Le TOP du corpus = diapos avec grandes photos (photos plein cadre des intros et des schémas).
 Le texte/formes/couleurs sont FIDÈLES. Deux causes structurelles génériques identifiées :
 
 1. **Photo d'intro « Introduction » (d.4, présente sur ~12 decks) trop sombre** (luma mesurée cercle
@@ -297,10 +297,10 @@ Cause : `loadContext` chargeait `theme1.xml` EN DUR. Or un deck multi-master a p
 master1→theme1 (lt2=C78243 orange), master2→theme2 (lt2=D9CAB7 beige). Rectangle de fond = schemeClr
 tx2 → clrMap tx2=lt2 → theme1 donnait l'orange au lieu du beige de theme2.
 FIX : `renderSlide` résout la chaîne diapo→layout→master→rels→theme AVANT `loadContext`, qui prend
-désormais le thème du master de la diapo. theme1 (VENT/PRESSION) inchangé. check.mjs 348+200, 0 erreur.
+désormais le thème du master de la diapo. theme1 (deck-12/deck-13) inchangé. check.mjs 348+200, 0 erreur.
 
 ## Fix images EMF/WMF manquantes + a:lum — 2026-07-24
-THERMO d.35 : grand graphique e-T ABSENT (fond noir). Cause : « Picture 2 » = image EMF (image38.emf),
+deck-11 d.35 : grand graphique e-T ABSENT (fond noir). Cause : « Picture 2 » = image EMF (image38.emf),
 format vecteur Windows non affichable en <image> -> imageHref renvoyait null.
 FIX : préprocessing `convert-metafiles.ps1` (.NET/WIC, x2) convertit chaque EMF/WMF en « <fichier>.png » ;
 `imageHref` sert ce PNG. Intégré à sweep.mjs + build-player.mjs (helper `metafiles.mjs`, via unzip ;
@@ -309,26 +309,26 @@ graphe a lum -20%/-20% -> teinte grise). RÉSULTAT : graphe rendu net + teinte c
 (Corpus : seulement 5 EMF/WMF au total, mais impact visuel fort sur les diapos concernées.)
 
 ## Fix <a:grpFill/> (régions colorées manquantes) — 2026-07-24
-THERMO d.55 : régions orange/bleue « Instabilité/Stabilité absolue » absentes (seule la verte, à
+deck-11 d.55 : régions orange/bleue « Instabilité/Stabilité absolue » absentes (seule la verte, à
 solidFill explicite, s'affichait). Cause : ces membres de groupe ont `<a:grpFill/>` (remplissage hérité
 du GROUPE) — le fill (accent3/bg2) est sur le grpSpPr. Mon moteur ne gérait pas grpFill -> fill=none.
 FIX : renderGroup résout le fill du grpSpPr et le propage (ctx.grpFill, restauré après, gère l'imbrication) ;
 fillFromSpPrFlat renvoie ctx.grpFill pour `<a:grpFill/>`. check.mjs 348+200, 0 err.
 
 ## Fix texte des tableaux trop gras/gros — 2026-07-24
-Tables (SANTE d.38, PRECIP d.19…) : texte tout en gras et trop grand -> débordait/rognait les cellules.
+Tables (deck-09 d.38, deck-08 d.19…) : texte tout en gras et trop grand -> débordait/rognait les cellules.
 Cause : renderText des cellules appelé avec phKind='body' -> héritait le style « corps » du master
 (gras/gros sur ces decks). FIX : phKind='none' (défaut neutre + rPr propre de chaque run, ex. b="1" sur
 la 1ʳᵉ colonne seulement). check.mjs 348+200, 0 err.
 
 ## Fix pointes de flèches des lignes/connecteurs (headEnd/tailEnd) — 2026-07-24
-7 diapos VENT (d.22,23,28,30,31,32,45) avaient des flèches SANS pointe : le moteur ignorait
+7 diapos deck-12 (d.22,23,28,30,31,32,45) avaient des flèches SANS pointe : le moteur ignorait
 `<a:ln><a:headEnd/><a:tailEnd type="arrow"/>`. FIX : marqueurs SVG partagés par type (triangle/arrow/
 stealth/diamond/oval), couleur = trait via `context-stroke`, `orient="auto-start-reverse"` (même marker
 début/fin), `markerUnits="strokeWidth"`. Appliqués au strokeAttr. check.mjs 348+200, 0 err.
 
-## Revue slide-par-slide VENT (48 diapos) — 2026-07-24
-Demande user : vérifier chaque diapo VENT. Montages mien|PowerPoint des 48. Résultat : ~40/48 fidèles.
+## Revue slide-par-slide deck-12 (48 diapos) — 2026-07-24
+Demande user : vérifier chaque diapo deck-12. Montages mien|PowerPoint des 48. Résultat : ~40/48 fidèles.
 Écarts trouvés + statut :
 - **Pointes de flèches (d.22,23,28,30,31,32,45)** -> CORRIGÉ (commit 9a67495, marqueurs SVG).
 - d.27 labels « à 1000 m/500/200 » : présents (blanc, bien placés) mais + petits que PowerPoint =

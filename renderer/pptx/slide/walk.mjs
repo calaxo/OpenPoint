@@ -84,7 +84,7 @@ function renderGroup(rc, grp, tf) {
                 sx: cE.cx ? g.cx/cE.cx : 1, sy: cE.cy ? g.cy/cE.cy : 1, inGroup: true };
     // rotation / miroir du GROUPE (les membres sont placés dans la boîte NON tournée, puis tout
     // le <g> tourne autour du centre du groupe). Sans ça, un groupe tourné rend à plat
-    // (ex. manches à air inclinées de VENT d.10).
+    // (ex. formes inclinées de deck-12 d.10).
     const rot = +at(xf)['@rot'] || 0, fH = at(xf)['@flipH']==='1', fV = at(xf)['@flipV']==='1';
     const ccx = u(g.x + g.cx/2), ccy = u(g.y + g.cy/2), parts = [];
     if (rot) parts.push(`rotate(${(rot/60000).toFixed(3)} ${ccx.toFixed(1)} ${ccy.toFixed(1)})`);

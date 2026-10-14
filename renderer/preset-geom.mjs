@@ -72,7 +72,7 @@ export const PRESETS = JSON.parse(readFileSync(join(__dir, 'preset-shapes.json')
 // COMBLE une OMISSION du XML ECMA : `upArrow` est absent de presetShapeDefinitions.xml
 // (il contient upDownArrow EN DOUBLE et upArrowCallout, mais pas upArrow — bug de la spec).
 // Sans lui, une flèche vers le haut tombait en rectangle (barre). On le définit comme le
-// MIROIR VERTICAL de downArrow (apex en haut au lieu d'en bas). Cf. VENT d.20 (vecteurs PGF).
+// MIROIR VERTICAL de downArrow (apex en haut au lieu d'en bas). Cf. deck-12 d.20 (vecteurs PGF).
 // Lecture des guides :
 //   adj1 = épaisseur du FÛT en 100000es de la largeur ; adj2 = hauteur de la POINTE en 100000es du
 //   petit côté (ss), bornée par maxAdj2 = 100000·h/ss pour que la pointe ne dépasse pas la hauteur.

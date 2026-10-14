@@ -25,7 +25,7 @@ export function fillFromSpPrFlat(rc, spFlat, styleFlat) {
   if (fr) {
     const idx = +fr['@idx'];
     // idx=0 = AUCUN remplissage (la couleur du ref n'est PAS à utiliser) — ex. forme `arc`
-    // ouverte (le 45° de VENT d.10) rendue en trait seul. Ne pas remplir.
+    // ouverte (le 45° de deck-12 d.10) rendue en trait seul. Ne pas remplir.
     if (idx === 0) return 'none';
     const phName = fr['a:schemeClr']?.['@val'] ?? fr['a:srgbClr']?.['@val'];
     if (idx >= 1 && ctx.fillStyles[idx - 1]) { const p = paint(rc, ctx.fillStyles[idx - 1], phName); if (p) return p; }
@@ -56,7 +56,7 @@ export function gradId(rc, gradFlat) {
   const id = uid + 'g' + grads.length;
   const gs = gradFlat['a:gsLst']?.['a:gs'];
   // stops TRIÉS par position croissante : SVG l'exige (sinon Chrome clampe les offsets décroissants ->
-  // dégradé faux, ex. sol de VENT d.35 rouge au lieu de vert). PowerPoint accepte l'ordre du document.
+  // dégradé faux, ex. fond de deck-12 d.35 rouge au lieu de vert). PowerPoint accepte l'ordre du document.
   const stops = (Array.isArray(gs)?gs:gs?[gs]:[]).map(s => ({ pos:(+s['@pos'])/1000, col: cssColor(resolveColorFlat(s, ctx)) }))
     .sort((a, b) => a.pos - b.pos);
   const ang = ((gradFlat['a:lin']?.['@ang']||0)/60000) * Math.PI/180;
@@ -80,7 +80,7 @@ export function dashArray(val, swp) {
 // context-stroke ; orient=auto-start-reverse -> même marker pour début et fin).
 // (rc.lineMarkers : Map clé -> <marker>)
 // dimensions en multiples de l'épaisseur du trait (markerUnits=strokeWidth) selon @len/@w (sm/med/lg).
-// PowerPoint « medium » ≈ 3-3,5× l'épaisseur (pas 8× — sinon pointes énormes, cf. flèches VENT d.28).
+// PowerPoint « medium » ≈ 3-3,5× l'épaisseur (pas 8× — sinon pointes énormes, cf. flèches deck-12 d.28).
 // Taille calibrée sur PowerPoint (export COM, traits de 1 / 2,25 / 4,5 pt) : pointe = 2 / 3 / 5 x
 // l'épaisseur (sm / med / lg), avec une épaisseur PLANCHER de 2 pt (un trait de 1 pt a une pointe
 // moyenne de 6 pt, pas 3) ; longueur = largeur ; le bout de la pointe tombe sur l'extrémité du trait.

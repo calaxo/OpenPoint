@@ -48,7 +48,7 @@ Validé : 548 diapos (deck A + deck B), 0 erreur. Ce tableau dit où creuser ens
 | `custGeom` **arcTo** | ✅ | `emitPath` | arc elliptique centré sur position courante (§20.1.9.4) |
 | `custGeom` gdLst/avLst **formules** | ✅ | `evalFmla` | 17 opérateurs `*/ +- +/ ?: abs sqrt max min mod pin sin cos tan at2 cat2 sat2 val` |
 | `prstGeom` **187 formes** (ST_ShapeType complet) | ✅ | `presetGeomD` | définitions officielles ECMA-376 bakées (`preset-shapes.json`) |
-| — dont flèches courbes/uturn/bent, callouts, cloud, étoiles, rubans, blockArc, actionButtons | ✅ | `evalGeom` | validé visuellement (TEMPERATURE d.28 uturnArrow, d.34) |
+| — dont flèches courbes/uturn/bent, callouts, cloud, étoiles, rubans, blockArc, actionButtons | ✅ | `evalGeom` | validé visuellement (deck-10 d.28 uturnArrow, d.34) |
 | guides intégrés (l/t/r/b/hc/vc/ss/ls/wdN/hdN/ssdN + angles cd2/3cd4…) | ✅ | `baseVars` | §20.1.10.56 |
 | détail au trait `fill="none"` (glyphes actionButtons) + ombrage 3D `darken/lighten` | 🟡 | `evalGeom` | silhouette OK, détail interne non tracé (rare dans le corpus) |
 
@@ -68,7 +68,7 @@ Validé : 548 diapos (deck A + deck B), 0 erreur. Ce tableau dit où creuser ens
 | gradFill linéaire (lin ang) | ✅ | `gradId` | |
 | gradFill radial/rect (path) | 🟡 | `gradId` | rendu radial générique (pas les foci exacts) |
 | blipFill (image dans forme) | ✅ | `renderSp`/`renderPic` | clip à la forme |
-| blipFill srcRect (recadrage) | ✅ | `renderPic` | l/t/r/b millièmes % → image agrandie+décalée+clippée ; validé d.5 PRECIPITATIONS |
+| blipFill srcRect (recadrage) | ✅ | `renderPic` | l/t/r/b millièmes % → image agrandie+décalée+clippée ; validé d.5 deck-08 |
 | blipFill tile (motif répété) | ❌ | — | traité comme stretch |
 | pattFill (hachures) | ❌ | — | |
 | fillRef (style thème idx) | ✅ | `fillFromSpPrFlat` | fillStyleLst[idx-1] |
@@ -86,11 +86,11 @@ Validé : 548 diapos (deck A + deck B), 0 erreur. Ce tableau dit où creuser ens
 | Élément | Statut | Code | Notes |
 |---|---|---|---|
 | outerShdw | ✅ | `effectFilter` | flou+offset+flood mergé |
-| glow | ✅ | `effectFilter` | halo coloré (morpho+blur+flood), doublé ; validé d.67 BASES_PHY |
+| glow | ✅ | `effectFilter` | halo coloré (morpho+blur+flood), doublé ; validé d.67 deck-04 |
 | softEdge | ✅ | `effectFilter` | flou alpha + re-découpe |
 | innerShdw / reflection | ❌ | — | reflection = copie miroir dégradée (rare : 1 dans le corpus) |
 | effets d'image : grayscl / duotone / alphaModFix | ✅ | `imageFilter` | feColorMatrix + componentTransfer ; opacité |
-| a14:imgEffect brightnessContrast / saturation | ✅ | `imageFilter`+`deepFindFlat` | feComponentTransfer linéaire + saturate ; validé VENT d.10 (12 images) |
+| a14:imgEffect brightnessContrast / saturation | ✅ | `imageFilter`+`deepFindFlat` | feComponentTransfer linéaire + saturate ; validé deck-12 d.10 (12 images) |
 | a14:imgEffect colorTemperature / sharpenSoften | ❌ | — | température couleur / netteté (approx. complexe) |
 | a:clrChange (transparence couleur) | ❌ | — | |
 | 3D (sp3d/scene3d/bevel) | ❌ | — | rare |
@@ -146,8 +146,8 @@ Validé : 548 diapos (deck A + deck B), 0 erreur. Ce tableau dit où creuser ens
 | tnLst/par/seq, cTn, cond (clics) | ✅ | `extractTiming` | étapes de clic |
 | set (visibility) | ✅ | player | cache/montre |
 | animEffect (fade/wipe/circle/box…) | ✅ | player CSS | entrées |
-| animMotion (path) | ✅ | `parseMotion`+player | translation le long du chemin (SMIL additive) ; validé CIRCU_GEN d.10 |
-| animRot | ✅ | `parseMotion`+player | rotation centrée (getBBox) ; validé VENT d.44 (spin 360°) |
+| animMotion (path) | ✅ | `parseMotion`+player | translation le long du chemin (SMIL additive) ; validé deck-05 d.10 |
+| animRot | ✅ | `parseMotion`+player | rotation centrée (getBBox) ; validé deck-12 d.44 (spin 360°) |
 | anim (ppt_x/y/w/h keyframes/fmla) | 🟡 | — | motion/scale par keyframes fines non rejouées (animMotion couvre le mvt explicite) |
 | animScale / animClr | ❌ | — | scale centré non exprimable en 1 transform additif ; changement de couleur |
 | exit / emph | 🟡 | player | exit=hide ; emph via animMotion/animRot ✅, pulse/grow ❌ |

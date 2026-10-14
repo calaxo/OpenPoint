@@ -93,12 +93,12 @@ Les règles transverses qui reviennent partout. À garder en tête en lisant la 
 - **`color-interpolation-filters="sRGB"` OBLIGATOIRE** sur les filtres qui font de la luminosité/
   contraste/saturation (a14:brightnessContrast, grayscl, duotone). Défaut SVG = **linearRGB** →
   les valeurs sont gamma-décodées, un intercept négatif écrase toute l'image en noir. PowerPoint
-  opère en sRGB. (Bug trouvé : fond nuageux assombri rendu tout noir, VENT d.28.)
+  opère en sRGB. (Bug trouvé : fond photo assombri rendu tout noir, deck-12 d.28.)
 
 ## Groupes
 - **Rotation/miroir du GROUPE** (`p:grpSpPr>a:xfrm @rot/@flipH/@flipV`) : à appliquer au `<g>`
   englobant, autour du centre du groupe. Les membres sont placés dans la boîte NON tournée puis
-  tout le groupe tourne. Oublié = groupes tournés rendus à plat (manches à air inclinées, VENT d.10).
+  tout le groupe tourne. Oublié = groupes tournés rendus à plat (formes inclinées, deck-12 d.10).
 
 ## Oracle de fidélité
 - **PowerPoint COM** (`Presentation.Slides(i).Export png`) = référence PIXEL-PERFECT pour comparer.

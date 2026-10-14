@@ -93,7 +93,7 @@ texte est l'invite « Cliquez pour modifier »).
 
 Validé visuellement sur le deck sample (28 diapos) contre un rendu de référence LibreOffice
 (`renderer/ref/`, `soffice --convert-to pdf` — LibreOffice n'est pas PowerPoint). Rendu très
-proche : fonds sombres du thème, swooshes/logos/hélico du masque, badges bleus (accent1),
+proche : fonds sombres du thème, swooshes/logos du masque, badges bleus (accent1),
 coins arrondis exacts, texte hérité clair, objectifs, définitions, pieds de page.
 
 Corrigé depuis v1 : résolution des polices de thème `+mn-lt/+mj-lt`, embarquement de Poppins,

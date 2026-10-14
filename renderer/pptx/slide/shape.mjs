@@ -94,7 +94,7 @@ export function renderSp(rc, sp, tf) {
     if (te) markers += ` marker-end="url(#${lineMarker(rc, te, ln['a:tailEnd'], u(sw))})"`;
   } else if (!ln && fill === 'none') {
     // Pas de <a:ln> mais une ligne thémée via <p:style><a:lnRef idx>=1> (ex. le connecteur en angle =
-    // carré d'angle droit de VENT d.26, invisible sinon). Scopé aux formes NON remplies (connecteurs/
+    // carré d'angle droit de deck-12 d.26, invisible sinon). Scopé aux formes NON remplies (connecteurs/
     // lignes) pour ne pas ajouter de bordure parasite aux cartes/boîtes pleines (pas de régression).
     const lr = spFlat['p:style']?.['a:lnRef'];
     const idx = lr ? +lr['@idx'] : 0;

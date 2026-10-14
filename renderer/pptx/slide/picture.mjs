@@ -39,7 +39,7 @@ export function renderPic(rc, pic, tf) {
   const custO = custFlat ? deepFind(pic, 'a:custGeom') : null;
   // <a:stretch><a:fillRect/> (mode par défaut d'une image) = ÉTIRER pour remplir la forme, sans
   // letterbox (preserveAspectRatio="none") — sinon des bandes transparentes laissent voir ce qui est
-  // dessous (ex. TEMP d.19 : le badge sous l'image transparaissait dans la bande du haut). Sans
+  // dessous (ex. deck-10 d.19 : le badge sous l'image transparaissait dans la bande du haut). Sans
   // stretch (tile/rare) : contain.
   const hasStretch = picFlat['p:blipFill']?.['a:stretch'] !== undefined;
   let clipAttr = '', fit = hasStretch ? 'none' : 'xMidYMid meet';
@@ -58,7 +58,7 @@ export function renderPic(rc, pic, tf) {
   }
   const rot = m.rot ? ` rotate(${(m.rot/60000).toFixed(2)} ${u(m.cx/2)} ${u(m.cy/2)})` : '';
   // miroir flipH/flipV (renderPic l'ignorait -> images de flèches courbes flip+rot dans le mauvais sens,
-  // ex. VENT d.14). Appliqué APRÈS rot dans la chaîne = AVANT la rotation sur le contenu (SVG right-to-
+  // ex. deck-12 d.14). Appliqué APRÈS rot dans la chaîne = AVANT la rotation sur le contenu (SVG right-to-
   // left), comme PowerPoint (miroir en repère local puis rotation). Le clip suit le même repère.
   const flip = (m.flipH || m.flipV) ? ` translate(${u(m.flipH?m.cx:0)} ${u(m.flipV?m.cy:0)}) scale(${m.flipH?-1:1} ${m.flipV?-1:1})` : '';
   const imgF = imageFilter(rc, picFlat['p:blipFill']?.['a:blip']); // grayscl/duotone/alphaModFix
