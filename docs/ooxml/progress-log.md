@@ -239,7 +239,7 @@ Le texte/formes/couleurs sont FIDÈLES. Deux causes structurelles génériques i
    FIX partiel commité : **srcRect NÉGATIF = ajustement de remplissage, PAS un recadrage** → on l'ignore
    et on garde le cover (`slice`) au lieu d'écraser l'image dans un coin (améliore le cadrage, luma +6).
 
-2. **Logos coin haut-droit (logos partenaires, pics du master) masqués** par un rectangle pleine-diapo
+2. **Logos coin haut-droit (logos partenaires du master) masqués** par un rectangle pleine-diapo
    dessiné APRÈS eux (ordre de calques master→layout→slide). `<image>` présent+positionné+valide dans le
    SVG (rendu OK en isolation) mais recouvert. NON corrigé : la sémantique exacte du z-order bg/formes
    inter-niveaux n'est pas confirmée (risque de régression sur toutes les diapos). CANDIDAT à traiter avec

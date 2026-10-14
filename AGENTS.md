@@ -84,3 +84,11 @@ dans les viewers. Ajouter une diapo = quelques lignes avec les helpers `sp()`, `
 | `tools/screenshot.mjs` | capture une page HTML dans Chrome (clics, touches, éléments) |
 | `tools/make-fixtures.mjs` | écrit les decks d'exemple |
 | `renderer/check.mjs`, `renderer/qa.mjs` | contrôles batch sur un dossier de decks réels |
+
+## 7. Licence des contributions
+
+Le code est sous **AGPL-3.0-or-later** (`LICENSE`). En proposant une contribution (commit, pull request,
+patch), vous acceptez qu'elle soit publiée sous cette licence **et** que le mainteneur du projet puisse
+aussi la distribuer sous une licence commerciale (double licence). Les polices de `renderer/fonts/`
+gardent leur propre licence (`renderer/fonts/LICENCES.md`) : n'y ajouter que des polices libres, avec
+leur texte de licence dans `renderer/fonts/licenses/`.

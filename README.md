@@ -95,3 +95,17 @@ node tools/export-poc.mjs && start poc/player.html
 ```
 
 `tools/dump-com.ps1` nécessite PowerPoint installé (Windows).
+
+## Licence
+
+Code sous **[GNU AGPL v3.0 ou ultérieure](LICENSE)** © les contributeurs d'OpenPoint :
+
+- vous pouvez utiliser, modifier et redistribuer ce code, y compris commercialement ;
+- toute version modifiée que vous distribuez **ou que vous faites tourner comme service en ligne
+  (SaaS)** doit être publiée sous la même licence, avec son code source et la mention de son origine
+  (ce dépôt) ;
+- pour un usage qui ne peut pas respecter l'AGPL (produit fermé, SaaS propriétaire), une licence
+  commerciale peut être demandée à l'auteur du projet.
+
+Les polices embarquées (`renderer/fonts/`) gardent leur propre licence libre (OFL, Apache 2.0, GUST,
+Bitstream Vera) : voir [renderer/fonts/LICENCES.md](renderer/fonts/LICENCES.md).

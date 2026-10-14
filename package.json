@@ -23,7 +23,7 @@
     "openpoint"
   ],
   "author": "OpenPoint contributors",
-  "license": "ISC",
+  "license": "AGPL-3.0-or-later",
   "dependencies": {
     "fast-xml-parser": "^5.10.1",
     "fflate": "^0.8.3",
